@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ClassSphere • Class View</title>
+<link rel="icon" type="image/png" href="../favicon.png"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--c:#00ffe0;--v:#bf5fff;--g:#ff6b35;--bg:#04010f;--card:rgba(255,255,255,0.03);--border:rgba(255,255,255,0.07)}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:#fff;min-height:100vh}
+
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:240px;background:rgba(255,255,255,.02);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 0;z-index:100;backdrop-filter:blur(20px)}
+.sidebar-logo{display:flex;align-items:center;gap:12px;padding:0 20px 24px;border-bottom:1px solid var(--border);margin-bottom:16px}
+.sidebar-logo img{width:36px;height:36px;border-radius:50%;border:1px solid rgba(0,255,224,.2)}
+.sidebar-logo span{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;background:linear-gradient(135deg,var(--c),var(--v));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-item{display:flex;align-items:center;gap:12px;padding:12px 20px;margin:2px 10px;border-radius:8px;cursor:pointer;font-size:.9rem;font-weight:500;color:rgba(255,255,255,.45);transition:all .2s;border:1px solid transparent}
+.nav-item:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.8)}
+.nav-item.active{background:rgba(0,255,224,.06);color:var(--c);border-color:rgba(0,255,224,.15)}
+.nav-icon{font-size:1.1rem;width:20px;text-align:center}
+.sidebar-bottom{margin-top:auto;padding:16px 10px 0;border-top:1px solid var(--border)}
+
+.main{margin-left:240px;padding:32px;min-height:100vh}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px}
+.back-btn{display:inline-flex;align-items:center;gap:8px;color:rgba(255,255,255,.4);font-size:.85rem;cursor:pointer;transition:color .2s;background:none;border:none;font-family:'Outfit',sans-serif}
+.back-btn:hover{color:var(--c)}
+
+.class-header{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:28px;position:relative;overflow:hidden}
+.class-header::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--c),var(--v))}
+.class-header-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
+.class-title{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:2px}
+.class-code-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:8px;background:rgba(0,255,224,.06);border:1px solid rgba(0,255,224,.2);font-family:'Space Mono',monospace;font-size:.85rem;color:var(--c);cursor:pointer;transition:background .2s}
+.class-code-badge:hover{background:rgba(0,255,224,.12)}
+.class-meta-row{display:flex;gap:24px;flex-wrap:wrap}
+.class-meta-item{font-size:.85rem;color:rgba(255,255,255,.45)}
+.class-meta-item span{color:rgba(255,255,255,.8);font-weight:600}
+
+.tabs{display:flex;gap:4px;margin-bottom:24px;background:rgba(255,255,255,.02);padding:4px;border-radius:10px;border:1px solid var(--border)}
+.tab{flex:1;padding:10px;text-align:center;border-radius:7px;cursor:pointer;font-size:.85rem;font-weight:600;color:rgba(255,255,255,.35);transition:all .2s;border:1px solid transparent}
+.tab.active{background:rgba(0,255,224,.08);color:var(--c);border-color:rgba(0,255,224,.2)}
+.tab:hover:not(.active){color:rgba(255,255,255,.6)}
+
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+.table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse}
+th{padding:12px 16px;text-align:left;font-size:.72rem;font-family:'Space Mono',monospace;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.3);background:rgba(255,255,255,.02);border-bottom:1px solid var(--border)}
+td{padding:14px 16px;font-size:.88rem;border-bottom:1px solid rgba(255,255,255,.04);color:rgba(255,255,255,.75)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+
+.attendance-form{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px}
+.att-meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px}
+.att-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:8px;background:rgba(255,255,255,.02);border:1px solid var(--border);margin-bottom:8px;transition:border-color .2s}
+.att-row:hover{border-color:rgba(0,255,224,.15)}
+.att-student{display:flex;align-items:center;gap:10px}
+.att-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--c),var(--v));display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:#04010f}
+.att-name{font-size:.9rem;font-weight:600}
+.att-roll{font-size:.75rem;color:rgba(255,255,255,.35)}
+.att-btns{display:flex;gap:6px}
+.att-btn{padding:6px 14px;border-radius:6px;border:1px solid;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .2s;background:transparent}
+.att-btn.present{border-color:rgba(0,255,224,.3);color:var(--c)}
+.att-btn.present.selected{background:rgba(0,255,224,.15);border-color:var(--c)}
+.att-btn.absent{border-color:rgba(255,107,53,.3);color:var(--g)}
+.att-btn.absent.selected{background:rgba(255,107,53,.15);border-color:var(--g)}
+.att-btn.late{border-color:rgba(191,95,255,.3);color:var(--v)}
+.att-btn.late.selected{background:rgba(191,95,255,.15);border-color:var(--v)}
+
+.marks-form{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px}
+
+.notes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.note-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;transition:all .2s;position:relative}
+.note-card:hover{border-color:rgba(0,255,224,.2);transform:translateY(-2px)}
+.note-type{display:inline-block;padding:3px 10px;border-radius:4px;font-size:.65rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
+.note-type.pdf{background:rgba(255,80,80,.1);color:#ff5050;border:1px solid rgba(255,80,80,.2)}
+.note-type.image{background:rgba(0,255,224,.1);color:var(--c);border:1px solid rgba(0,255,224,.2)}
+.note-type.doc{background:rgba(191,95,255,.1);color:var(--v);border:1px solid rgba(191,95,255,.2)}
+.note-title{font-size:.95rem;font-weight:700;margin-bottom:4px}
+.note-sub{font-size:.78rem;color:rgba(255,255,255,.35);margin-bottom:14px}
+.note-actions{display:flex;gap:8px}
+
+.upload-area{border:2px dashed rgba(0,255,224,.2);border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;margin-bottom:20px}
+.upload-area:hover{border-color:rgba(0,255,224,.4);background:rgba(0,255,224,.02)}
+.upload-icon{font-size:2.5rem;margin-bottom:12px}
+.upload-text{font-size:.9rem;color:rgba(255,255,255,.5)}
+.upload-text span{color:var(--c);font-weight:600}
+
+.badge{display:inline-block;padding:3px 10px;border-radius:50px;font-size:.72rem;font-weight:700}
+.badge-present{background:rgba(0,255,224,.1);color:var(--c);border:1px solid rgba(0,255,224,.2)}
+.badge-absent{background:rgba(255,107,53,.1);color:var(--g);border:1px solid rgba(255,107,53,.2)}
+.badge-late{background:rgba(191,95,255,.1);color:var(--v);border:1px solid rgba(191,95,255,.2)}
+
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:6px;border:none;font-family:'Outfit',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-primary{background:var(--c);color:#04010f}
+.btn-primary:hover{box-shadow:0 8px 24px rgba(0,255,224,.3);transform:translateY(-2px)}
+.btn-outline{background:transparent;color:rgba(255,255,255,.6);border:1px solid var(--border)}
+.btn-outline:hover{border-color:rgba(255,255,255,.3);color:#fff}
+.btn-danger{background:rgba(255,80,80,.1);color:#ff5050;border:1px solid rgba(255,80,80,.2)}
+.btn-danger:hover{background:rgba(255,80,80,.2)}
+.btn-sm{padding:6px 14px;font-size:.78rem}
+
+.fg{margin-bottom:14px}
+.fg label{display:block;font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:7px}
+.fg input,.fg select{width:100%;padding:11px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#fff;font-family:'Outfit',sans-serif;font-size:.88rem;outline:none;transition:border-color .2s}
+.fg input:focus,.fg select:focus{border-color:rgba(0,255,224,.3);box-shadow:0 0 0 3px rgba(0,255,224,.06)}
+.fg select option{background:#04010f}
+
+.empty-state{text-align:center;padding:50px 20px;border:1px dashed rgba(255,255,255,.08);border-radius:12px}
+.empty-icon{font-size:2.5rem;margin-bottom:12px}
+.empty-title{font-size:1rem;font-weight:600;color:rgba(255,255,255,.5);margin-bottom:6px}
+.empty-sub{font-size:.82rem;color:rgba(255,255,255,.25)}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(10,5,32,.95);border:1px solid rgba(0,255,224,.2);border-radius:50px;padding:12px 24px;display:flex;align-items:center;gap:10px;font-size:.85rem;font-weight:500;backdrop-filter:blur(20px);z-index:999;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s cubic-bezier(.22,1,.36,1);white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.loading{display:flex;align-items:center;justify-content:center;padding:40px;gap:12px;color:rgba(255,255,255,.3);font-size:.9rem}
+.spinner{width:18px;height:18px;border:2px solid rgba(0,255,224,.2);border-top-color:var(--c);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+@media(max-width:768px){
+  .sidebar{width:60px}
+  .sidebar-logo span,.nav-label{display:none}
+  .main{margin-left:60px;padding:16px}
+  .att-meta{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+  <aside class="sidebar">
+  <div class="sidebar-logo">
+    <img src="../logo.png" alt="ClassSphere">
+    <span>ClassSphere</span>
+  </div>
+  <nav>
+    <div class="nav-item" onclick="window.location.href='dashboard.html'">
+      <span class="nav-icon">🏫</span>
+      <span class="nav-label">My Classes</span>
+    </div>
+    <div class="nav-item active">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label">Class View</span>
+    </div>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="nav-item" onclick="window.location.href='/profile.html'">
+      <span class="nav-icon">⚙️</span>
+      <span class="nav-label">Edit Profile</span>
+    </div>
+    <div class="nav-item" onclick="logout()">
+      <span class="nav-icon">🚪</span>
+      <span class="nav-label">Logout</span>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <button class="back-btn" onclick="window.location.href='dashboard.html'">← Back to Dashboard</button>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--c),var(--v));display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:#04010f" id="teacherAvatar">T</div>
+      <span style="font-size:.85rem;font-weight:600" id="teacherName">Teacher</span>
+    </div>
+  </div>
+
+  <div class="class-header">
+    <div class="class-header-top">
+      <div>
+        <div class="class-title" id="classTitle">Loading...</div>
+        <div class="class-meta-row" id="classMeta"></div>
+      </div>
+      <div class="class-code-badge" id="codeBadge" onclick="copyCode()">
+        <span>📋</span>
+        <span id="classCodeDisplay">------</span>
+        <span style="font-size:.7rem;color:rgba(255,255,255,.4)">Copy Code</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('students')">👥 Students</div>
+    <div class="tab" onclick="switchTab('attendance')">📡 Attendance</div>
+    <div class="tab" onclick="switchTab('marks')">📊 Marks</div>
+    <div class="tab" onclick="switchTab('notes')">📚 Notes</div>
+  </div>
+
+  <!-- STUDENTS TAB -->
+  <div class="tab-content active" id="tab-students">
+    <div id="studentsContainer">
+      <div class="loading"><div class="spinner"></div> Loading students...</div>
+    </div>
+  </div>
+
+  <!-- ATTENDANCE TAB -->
+  <div class="tab-content" id="tab-attendance">
+    <div class="attendance-form">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;margin-bottom:16px;color:var(--c)">Mark Today's Attendance</div>
+      <div class="att-meta">
+        <div class="fg">
+          <label>Date</label>
+          <input type="date" id="attDate">
+        </div>
+        <div class="fg">
+          <label>Lecture No.</label>
+          <select id="attLecture">
+            <option>1</option><option>2</option><option>3</option>
+            <option>4</option><option>5</option><option>6</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Subject</label>
+          <input type="text" id="attSubject" placeholder="Subject name">
+        </div>
+      </div>
+      <div id="attStudentsList"></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:16px" onclick="submitAttendance()">
+        Submit Attendance 📡
+      </button>
+    </div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:2px;margin-bottom:16px">Attendance History</div>
+    <div id="attendanceHistory">
+      <div class="loading"><div class="spinner"></div> Loading...</div>
+    </div>
+  </div>
+
+  <!-- MARKS TAB -->
+  <div class="tab-content" id="tab-marks">
+    <div class="marks-form">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;margin-bottom:16px;color:var(--c)">Add Marks</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+        <div class="fg">
+          <label>Student</label>
+          <select id="marksStudent"></select>
+        </div>
+        <div class="fg">
+          <label>Exam Type</label>
+          <select id="marksExamType">
+            <option value="unit test">Unit Test</option>
+            <option value="midterm">Midterm</option>
+            <option value="final">Final</option>
+            <option value="assignment">Assignment</option>
+            <option value="quiz">Quiz</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Subject</label>
+          <input type="text" id="marksSubject" placeholder="Subject">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+        <div class="fg">
+          <label>Marks Obtained</label>
+          <input type="number" id="marksObtained" placeholder="e.g. 85">
+        </div>
+        <div class="fg">
+          <label>Total Marks</label>
+          <input type="number" id="marksTotal" placeholder="e.g. 100">
+        </div>
+        <div class="fg">
+          <label>Remarks</label>
+          <input type="text" id="marksRemarks" placeholder="Optional">
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="submitMarks()">
+        Add Marks 📊
+      </button>
+    </div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:2px;margin-bottom:16px">Marks History</div>
+    <div id="marksHistory">
+      <div class="loading"><div class="spinner"></div> Loading...</div>
+    </div>
+  </div>
+
+  <!-- NOTES TAB -->
+  <div class="tab-content" id="tab-notes">
+    <div class="attendance-form">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;margin-bottom:16px;color:var(--c)">Upload Notes / Files</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div class="fg">
+          <label>Title</label>
+          <input type="text" id="noteTitle" placeholder="e.g. Chapter 3 Notes">
+        </div>
+        <div class="fg">
+          <label>Subject</label>
+          <input type="text" id="noteSubject" placeholder="e.g. Data Structures">
+        </div>
+      </div>
+      <div class="fg">
+        <label>Description</label>
+        <input type="text" id="noteDesc" placeholder="Brief description (optional)">
+      </div>
+      <div class="upload-area" onclick="document.getElementById('noteFile').click()">
+        <div class="upload-icon">📁</div>
+        <div class="upload-text">Click to upload <span>PDF, Image or Word Doc</span></div>
+        <div style="font-size:.75rem;color:rgba(255,255,255,.25);margin-top:6px">Max size: 10MB</div>
+        <div id="fileName" style="margin-top:10px;font-size:.82rem;color:var(--c)"></div>
+      </div>
+      <input type="file" id="noteFile" style="display:none" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onchange="document.getElementById('fileName').textContent=this.files[0]?.name||''">
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="uploadNote()">
+        Upload 📚
+      </button>
+    </div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:2px;margin-bottom:16px">Uploaded Files</div>
+    <div id="notesList">
+      <div class="loading"><div class="spinner"></div> Loading...</div>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast">
+  <span id="toastIcon">✅</span>
+  <span id="toastMsg">Done!</span>
+</div>
+<script>
+const API=window.location.origin;
+const token=localStorage.getItem('token');
+const user=JSON.parse(localStorage.getItem('user')||'{}');
+const currentClass=JSON.parse(localStorage.getItem('currentClass')||'{}');
+
+if(!token||user.role!=='teacher')window.location.href='../login.html';
+if(!currentClass.classId)window.location.href='dashboard.html';
+
+// Init
+document.getElementById('teacherName').textContent=user.name||'Teacher';
+document.getElementById('teacherAvatar').textContent=(user.name||'T')[0].toUpperCase();
+document.getElementById('classTitle').textContent=currentClass.className||'Class';
+document.getElementById('classCodeDisplay').textContent=currentClass.classCode||'------';
+document.getElementById('classMeta').innerHTML=`<div class="class-meta-item">Subject: <span>${currentClass.subject||''}</span></div>`;
+document.getElementById('attDate').value=new Date().toISOString().split('T')[0];
+document.getElementById('attSubject').value=currentClass.subject||'';
+document.getElementById('marksSubject').value=currentClass.subject||'';
+
+// Copy code
+function copyCode(){
+  navigator.clipboard.writeText(currentClass.classCode);
+  showToast('📋','Class code copied!');
+}
+
+// Switch tab
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  const tabs=['students','attendance','marks','notes'];
+  const idx=tabs.indexOf(name);
+  document.querySelectorAll('.tab')[idx].classList.add('active');
+  document.getElementById(`tab-${name}`).classList.add('active');
+  if(name==='attendance')loadAttendanceHistory();
+  if(name==='marks')loadMarksHistory();
+  if(name==='notes')loadNotes();
+}
+
+// Load class data
+async function loadClassData(){
+  try{
+    const res=await fetch(`${API}/api/classes/${currentClass.classCode}`,{headers:{'Authorization':`Bearer ${token}`}});
+    const data=await res.json();
+    const students=data.class?.students||[];
+    renderStudents(students);
+    populateStudentSelect(students);
+    renderAttStudents(students);
+  }catch(err){showToast('❌','Failed to load class data')}
+}
+
+// Render students table
+function renderStudents(students){
+  const c=document.getElementById('studentsContainer');
+  if(students.length===0){
+    c.innerHTML=`<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-title">No students yet</div><div class="empty-sub">Share the class code <strong style="color:var(--c)">${currentClass.classCode}</strong> with your students</div></div>`;
+    return;
+  }
+  c.innerHTML=`<div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>Name</th><th>Roll No.</th><th>Email</th><th>Phone</th><th>Parent Email</th><th>Parent WhatsApp</th></tr></thead>
+    <tbody>
+      ${students.map((s,i)=>`
+        <tr>
+          <td>${i+1}</td>
+          <td><strong>${s.name}</strong></td>
+          <td><span style="font-family:'Space Mono',monospace;font-size:.8rem;color:var(--c)">${s.rollNumber||'-'}</span></td>
+          <td>${s.email||'-'}</td>
+          <td>${s.phone||'-'}</td>
+          <td>${s.parentEmail||'-'}</td>
+          <td>${s.parentWhatsapp||'-'}</td>
+        </tr>`).join('')}
+    </tbody>
+  </table></div>`;
+}
+
+// Populate student select
+function populateStudentSelect(students){
+  const sel=document.getElementById('marksStudent');
+  sel.innerHTML=students.map(s=>`<option value="${s.userId}">${s.name} (${s.rollNumber||''})</option>`).join('');
+}
+
+// Render attendance students
+let attRecords={};
+function renderAttStudents(students){
+  const c=document.getElementById('attStudentsList');
+  if(students.length===0){
+    c.innerHTML=`<div style="text-align:center;padding:20px;color:rgba(255,255,255,.3)">No students in this class yet</div>`;
+    return;
+  }
+  students.forEach(s=>{attRecords[s.userId]='present'});
+  c.innerHTML=students.map(s=>`
+    <div class="att-row">
+      <div class="att-student">
+        <div class="att-avatar">${s.name[0].toUpperCase()}</div>
+        <div>
+          <div class="att-name">${s.name}</div>
+          <div class="att-roll">${s.rollNumber||''}</div>
+        </div>
+      </div>
+      <div class="att-btns">
+        <button class="att-btn present selected" onclick="setAtt('${s.userId}','present',this)">Present</button>
+        <button class="att-btn absent" onclick="setAtt('${s.userId}','absent',this)">Absent</button>
+        <button class="att-btn late" onclick="setAtt('${s.userId}','late',this)">Late</button>
+      </div>
+    </div>`).join('');
+}
+
+function setAtt(userId,status,btn){
+  attRecords[userId]=status;
+  const row=btn.closest('.att-row');
+  row.querySelectorAll('.att-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+// Submit attendance
+async function submitAttendance(){
+  const date=document.getElementById('attDate').value;
+  const lecture=document.getElementById('attLecture').value;
+  const subject=document.getElementById('attSubject').value;
+  if(!date||!subject)return showToast('⚠️','Please fill date and subject');
+
+  const res=await fetch(`${API}/api/classes/${currentClass.classCode}`,{headers:{'Authorization':`Bearer ${token}`}});
+  const data=await res.json();
+  const students=data.class?.students||[];
+
+  const records=students.map(s=>({
+    studentId:s.userId,
+    name:s.name,
+    rollNumber:s.rollNumber,
+    status:attRecords[s.userId]||'present'
+  }));
+
+  try{
+    const r=await fetch(`${API}/api/attendance/mark`,{
+      method:'POST',
+      headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},
+      body:JSON.stringify({classId:currentClass.classId,date,lecture,subject,records})
+    });
+    const d=await r.json();
+    if(r.ok){
+      showToast('✅','Attendance marked! Parents notified 📧');
+      loadAttendanceHistory();
+
+      // Show WhatsApp buttons for absent students
+      const absentStudents=records.filter(rec=>rec.status==='absent');
+      if(absentStudents.length>0){
+        absentStudents.forEach(absent=>{
+          const student=students.find(s=>s.userId===absent.studentId);
+          if(student?.parentWhatsapp){
+            const phone=student.parentWhatsapp.replace(/[^0-9]/g,'');
+            const message=encodeURIComponent(
+              `🚨 *ClassSphere Absence Alert*\n\nDear Parent,\n\nYour child *${student.name}* was marked *ABSENT* in:\n\n📚 Subject: ${subject}\n📅 Date: ${date}\n\nPlease ensure regular attendance.\n\n— ClassSphere Team`
+            );
+            const link=`https://wa.me/${phone}?text=${message}`;
+            showWhatsAppAlert(student.name,link);
+          }
+        });
+      }
+    }else{
+      showToast('❌',d.message);
+    }
+  }catch(err){showToast('❌','Failed to submit attendance')}
+}
+
+// WhatsApp Alert Popup
+function showWhatsAppAlert(studentName,link){
+  const div=document.createElement('div');
+  div.style.cssText=`position:fixed;bottom:80px;right:24px;background:#075e54;border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 30px rgba(0,0,0,.4);z-index:1000;animation:fadeUp .4s ease;max-width:320px;`;
+  div.innerHTML=`
+    <span style="font-size:1.4rem">💬</span>
+    <div style="flex:1">
+      <div style="font-size:.82rem;font-weight:700;color:#fff;margin-bottom:2px">Notify ${studentName}'s Parent</div>
+      <div style="font-size:.72rem;color:rgba(255,255,255,.7)">Click to send WhatsApp</div>
+    </div>
+    <a href="${link}" target="_blank" style="background:#25d366;color:#fff;padding:6px 12px;border-radius:6px;font-size:.78rem;font-weight:700;text-decoration:none;white-space:nowrap">Send 📱</a>
+    <button onclick="this.parentElement.remove()" style="background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;font-size:1rem;padding:2px">✕</button>
+  `;
+  document.body.appendChild(div);
+  setTimeout(()=>div.remove(),10000);
+}
+
+// Load attendance history
+async function loadAttendanceHistory(){
+  try{
+    const res=await fetch(`${API}/api/attendance/${currentClass.classId}`,{headers:{'Authorization':`Bearer ${token}`}});
+    const data=await res.json();
+    const history=data.attendance||[];
+    const c=document.getElementById('attendanceHistory');
+    if(history.length===0){
+      c.innerHTML=`<div class="empty-state"><div class="empty-icon">📡</div><div class="empty-title">No attendance records yet</div></div>`;
+      return;
+    }
+    c.innerHTML=`<div class="table-wrap"><table>
+      <thead><tr><th>Date</th><th>Lecture</th><th>Subject</th><th>Present</th><th>Absent</th><th>Late</th></tr></thead>
+      <tbody>
+        ${history.map(a=>`
+          <tr>
+            <td>${a.date}</td>
+            <td>Lecture ${a.lecture}</td>
+            <td>${a.subject}</td>
+            <td><span class="badge badge-present">${a.records.filter(r=>r.status==='present').length}</span></td>
+            <td><span class="badge badge-absent">${a.records.filter(r=>r.status==='absent').length}</span></td>
+            <td><span class="badge badge-late">${a.records.filter(r=>r.status==='late').length}</span></td>
+          </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+  }catch(err){showToast('❌','Failed to load attendance')}
+}
+
+// Submit marks
+async function submitMarks(){
+  const studentId=document.getElementById('marksStudent').value;
+  const examType=document.getElementById('marksExamType').value;
+  const subject=document.getElementById('marksSubject').value;
+  const marksObtained=document.getElementById('marksObtained').value;
+  const totalMarks=document.getElementById('marksTotal').value;
+  const remarks=document.getElementById('marksRemarks').value;
+  if(!studentId||!marksObtained||!totalMarks)return showToast('⚠️','Please fill all required fields');
+
+  const res=await fetch(`${API}/api/classes/${currentClass.classCode}`,{headers:{'Authorization':`Bearer ${token}`}});
+  const data=await res.json();
+  const student=data.class?.students.find(s=>s.userId===studentId);
+
+  try{
+    const r=await fetch(`${API}/api/marks/add`,{
+      method:'POST',
+      headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},
+      body:JSON.stringify({
+        classId:currentClass.classId,
+        studentId,
+        studentName:student?.name||'',
+        rollNumber:student?.rollNumber||'',
+        subject,examType,
+        marksObtained:Number(marksObtained),
+        totalMarks:Number(totalMarks),
+        remarks
+      })
+    });
+    const d=await r.json();
+    if(r.ok){
+      showToast('✅',`Marks added! Grade: ${d.marks.grade}`);
+      loadMarksHistory();
+      document.getElementById('marksObtained').value='';
+      document.getElementById('marksTotal').value='';
+      document.getElementById('marksRemarks').value='';
+    }else{
+      showToast('❌',d.message);
+    }
+  }catch(err){showToast('❌','Failed to add marks')}
+}
+
+// Load marks history
+async function loadMarksHistory(){
+  try{
+    const res=await fetch(`${API}/api/marks/class/${currentClass.classId}`,{headers:{'Authorization':`Bearer ${token}`}});
+    const data=await res.json();
+    const marks=data.marks||[];
+    const c=document.getElementById('marksHistory');
+    if(marks.length===0){
+      c.innerHTML=`<div class="empty-state"><div class="empty-icon">📊</div><div class="empty-title">No marks added yet</div></div>`;
+      return;
+    }
+    c.innerHTML=`<div class="table-wrap"><table>
+      <thead><tr><th>Student</th><th>Subject</th><th>Exam</th><th>Marks</th><th>Grade</th><th>Remarks</th></tr></thead>
+      <tbody>
+        ${marks.map(m=>`
+          <tr>
+            <td><strong>${m.studentName}</strong><br><span style="font-size:.75rem;color:rgba(255,255,255,.35)">${m.rollNumber}</span></td>
+            <td>${m.subject}</td>
+            <td style="text-transform:capitalize">${m.examType}</td>
+            <td><strong style="color:var(--c)">${m.marksObtained}</strong>/${m.totalMarks}</td>
+            <td><span class="badge ${m.grade==='F'?'badge-absent':m.grade.startsWith('A')?'badge-present':'badge-late'}">${m.grade}</span></td>
+            <td>${m.remarks||'-'}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+  }catch(err){showToast('❌','Failed to load marks')}
+}
+
+// Upload note
+async function uploadNote(){
+  const title=document.getElementById('noteTitle').value;
+  const subject=document.getElementById('noteSubject').value;
+  const desc=document.getElementById('noteDesc').value;
+  const file=document.getElementById('noteFile').files[0];
+  if(!title)return showToast('⚠️','Please enter a title');
+
+  const formData=new FormData();
+  formData.append('classId',currentClass.classId);
+  formData.append('title',title);
+  formData.append('subject',subject);
+  formData.append('description',desc);
+  formData.append('uploaderName',user.name);
+  if(file)formData.append('file',file);
+
+  try{
+    const r=await fetch(`${API}/api/notes/upload`,{
+      method:'POST',
+      headers:{'Authorization':`Bearer ${token}`},
+      body:formData
+    });
+    const d=await r.json();
+    if(r.ok){
+      showToast('✅','Notes uploaded successfully!');
+      loadNotes();
+      document.getElementById('noteTitle').value='';
+      document.getElementById('noteDesc').value='';
+      document.getElementById('noteFile').value='';
+      document.getElementById('fileName').textContent='';
+    }else{
+      showToast('❌',d.message);
+    }
+  }catch(err){showToast('❌','Failed to upload notes')}
+}
+
+// Load notes
+async function loadNotes(){
+  try{
+    const res=await fetch(`${API}/api/notes/${currentClass.classId}`,{headers:{'Authorization':`Bearer ${token}`}});
+    const data=await res.json();
+    const notes=data.notes||[];
+    const c=document.getElementById('notesList');
+    if(notes.length===0){
+      c.innerHTML=`<div class="empty-state"><div class="empty-icon">📚</div><div class="empty-title">No files uploaded yet</div></div>`;
+      return;
+    }
+    c.innerHTML=`<div class="notes-grid">${notes.map(n=>{
+      const isPdf=n.fileType?.includes('pdf');
+      const isImg=n.fileType?.includes('image');
+      const typeClass=isPdf?'pdf':isImg?'image':'doc';
+      const typeLabel=isPdf?'PDF':isImg?'Image':'Document';
+      return `<div class="note-card">
+        <span class="note-type ${typeClass}">${typeLabel}</span>
+        <div class="note-title">${n.title}</div>
+        <div class="note-sub">${n.subject||''} ${n.description?'· '+n.description:''}</div>
+        <div class="note-actions">
+          ${n.fileUrl?`<a href="${n.fileUrl}" target="_blank" class="btn btn-outline btn-sm">View 👁</a>`:''}
+          ${n.fileUrl?`<a href="${n.fileUrl}" download class="btn btn-outline btn-sm">Download ⬇</a>`:''}
+          <button class="btn btn-danger btn-sm" onclick="deleteNote('${n._id}')">Delete 🗑</button>
+        </div>
+      </div>`;
+    }).join('')}</div>`;
+  }catch(err){showToast('❌','Failed to load notes')}
+}
+
+// Delete note
+async function deleteNote(id){
+  if(!confirm('Delete this note?'))return;
+  try{
+    const r=await fetch(`${API}/api/notes/${id}`,{method:'DELETE',headers:{'Authorization':`Bearer ${token}`}});
+    if(r.ok){showToast('✅','Note deleted');loadNotes();}
+  }catch(err){showToast('❌','Failed to delete')}
+}
+
+// Toast
+function showToast(icon,msg){
+  document.getElementById('toastIcon').textContent=icon;
+  document.getElementById('toastMsg').textContent=msg;
+  const t=document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+// Logout
+function logout(){
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  window.location.href='../login.html';
+}
+
+loadClassData();
+</script>
+</body>
+</html>

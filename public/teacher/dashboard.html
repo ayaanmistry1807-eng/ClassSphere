@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ClassSphere • Teacher Dashboard</title>
+<link rel="icon" type="image/png" href="../favicon.png"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --c:#00ffe0;--v:#bf5fff;--g:#ff6b35;
+  --bg:#04010f;--card:rgba(255,255,255,0.03);
+  --border:rgba(255,255,255,0.07);
+}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:#fff;min-height:100vh}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  position:fixed;left:0;top:0;bottom:0;width:240px;
+  background:rgba(255,255,255,0.02);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  padding:24px 0;z-index:100;
+  backdrop-filter:blur(20px);
+}
+.sidebar-logo{
+  display:flex;align-items:center;gap:12px;
+  padding:0 20px 24px;
+  border-bottom:1px solid var(--border);
+  margin-bottom:16px;
+}
+.sidebar-logo img{width:36px;height:36px;border-radius:50%;border:1px solid rgba(0,255,224,0.2)}
+.sidebar-logo span{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;background:linear-gradient(135deg,var(--c),var(--v));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 20px;margin:2px 10px;
+  border-radius:8px;cursor:pointer;
+  font-size:.9rem;font-weight:500;
+  color:rgba(255,255,255,0.45);
+  transition:all .2s;border:1px solid transparent;
+}
+.nav-item:hover{background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.8)}
+.nav-item.active{background:rgba(0,255,224,0.06);color:var(--c);border-color:rgba(0,255,224,0.15)}
+.nav-icon{font-size:1.1rem;width:20px;text-align:center}
+
+.sidebar-bottom{margin-top:auto;padding:16px 10px 0;border-top:1px solid var(--border)}
+
+/* ── MAIN ── */
+.main{margin-left:240px;padding:32px;min-height:100vh}
+
+/* ── TOPBAR ── */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:32px;
+}
+.topbar-left h1{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:2px;background:linear-gradient(135deg,var(--c),var(--v));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.topbar-left p{font-size:.85rem;color:rgba(255,255,255,0.4);margin-top:2px}
+.topbar-right{display:flex;align-items:center;gap:12px}
+
+.teacher-info{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 16px;border-radius:50px;
+  background:var(--card);border:1px solid var(--border);
+}
+.teacher-avatar{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,var(--c),var(--v));
+  display:flex;align-items:center;justify-content:center;
+  font-size:.8rem;font-weight:700;color:#04010f;
+}
+.teacher-name{font-size:.85rem;font-weight:600}
+
+/* ── STATS ROW ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}
+.stat-card{
+  padding:20px;border-radius:12px;
+  background:var(--card);border:1px solid var(--border);
+  position:relative;overflow:hidden;
+  transition:border-color .2s,transform .2s;
+}
+.stat-card:hover{border-color:rgba(0,255,224,0.2);transform:translateY(-2px)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat-card.c::before{background:linear-gradient(90deg,var(--c),transparent)}
+.stat-card.v::before{background:linear-gradient(90deg,var(--v),transparent)}
+.stat-card.g::before{background:linear-gradient(90deg,var(--g),transparent)}
+.stat-card.w::before{background:linear-gradient(90deg,#fff,transparent)}
+.stat-num{font-family:'Bebas Neue',sans-serif;font-size:2.5rem;line-height:1}
+.stat-card.c .stat-num{color:var(--c)}
+.stat-card.v .stat-num{color:var(--v)}
+.stat-card.g .stat-num{color:var(--g)}
+.stat-card.w .stat-num{color:#fff}
+.stat-label{font-size:.75rem;color:rgba(255,255,255,0.4);letter-spacing:1px;text-transform:uppercase;margin-top:4px}
+
+/* ── SECTION HEADER ── */
+.section-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:16px;
+}
+.section-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:rgba(255,255,255,0.9)}
+
+/* ── BTN ── */
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 20px;border-radius:6px;border:none;
+  font-family:'Outfit',sans-serif;font-size:.85rem;font-weight:600;
+  cursor:pointer;transition:all .2s;letter-spacing:.5px;
+}
+.btn-primary{background:var(--c);color:#04010f}
+.btn-primary:hover{box-shadow:0 8px 24px rgba(0,255,224,0.3);transform:translateY(-2px)}
+.btn-outline{background:transparent;color:rgba(255,255,255,0.6);border:1px solid var(--border)}
+.btn-outline:hover{border-color:rgba(255,255,255,0.3);color:#fff}
+.btn-danger{background:rgba(255,80,80,0.1);color:#ff5050;border:1px solid rgba(255,80,80,0.2)}
+.btn-danger:hover{background:rgba(255,80,80,0.2)}
+
+/* ── CLASS CARDS ── */
+.classes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:32px}
+.class-card{
+  padding:20px;border-radius:12px;
+  background:var(--card);border:1px solid var(--border);
+  cursor:pointer;transition:all .25s;position:relative;overflow:hidden;
+}
+.class-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--c),var(--v))}
+.class-card:hover{border-color:rgba(0,255,224,0.25);transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,255,224,0.08)}
+.class-code{
+  display:inline-block;padding:4px 10px;border-radius:4px;
+  background:rgba(0,255,224,0.08);border:1px solid rgba(0,255,224,0.2);
+  font-family:'Space Mono',monospace;font-size:.7rem;color:var(--c);
+  margin-bottom:12px;letter-spacing:2px;
+}
+.class-name{font-size:1.1rem;font-weight:700;margin-bottom:4px}
+.class-subject{font-size:.82rem;color:rgba(255,255,255,0.45);margin-bottom:14px}
+.class-meta{display:flex;align-items:center;justify-content:space-between}
+.class-students{font-size:.8rem;color:rgba(255,255,255,0.35)}
+.class-students span{color:var(--c);font-weight:700}
+
+/* ── MODAL ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(4,1,15,0.85);
+  backdrop-filter:blur(8px);z-index:200;
+  display:none;align-items:center;justify-content:center;
+}
+.modal-overlay.show{display:flex}
+.modal{
+  background:#0a0520;border:1px solid rgba(0,255,224,0.15);
+  border-radius:16px;padding:32px;width:100%;max-width:480px;
+  position:relative;
+}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:2px;margin-bottom:24px;background:linear-gradient(135deg,var(--c),var(--v));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.modal-close{position:absolute;top:16px;right:16px;background:none;border:none;color:rgba(255,255,255,0.4);font-size:1.2rem;cursor:pointer;transition:color .2s}
+.modal-close:hover{color:#fff}
+
+/* ── FORM ── */
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:.72rem;font-family:'Space Mono',monospace;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:8px}
+.form-group input,.form-group select{
+  width:100%;padding:12px 16px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:8px;color:#fff;
+  font-family:'Outfit',sans-serif;font-size:.9rem;
+  outline:none;transition:border-color .2s,box-shadow .2s;
+}
+.form-group input:focus,.form-group select:focus{border-color:rgba(0,255,224,0.3);box-shadow:0 0 0 3px rgba(0,255,224,0.06)}
+.form-group select option{background:#0a0520}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ── EMPTY STATE ── */
+.empty-state{
+  text-align:center;padding:60px 20px;
+  border:1px dashed rgba(255,255,255,0.08);
+  border-radius:12px;
+}
+.empty-icon{font-size:3rem;margin-bottom:16px}
+.empty-title{font-size:1.1rem;font-weight:600;color:rgba(255,255,255,0.6);margin-bottom:8px}
+.empty-sub{font-size:.85rem;color:rgba(255,255,255,0.3)}
+
+/* ── TOAST ── */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:rgba(10,5,32,0.95);border:1px solid rgba(0,255,224,0.2);
+  border-radius:50px;padding:12px 24px;
+  display:flex;align-items:center;gap:10px;
+  font-size:.85rem;font-weight:500;
+  backdrop-filter:blur(20px);z-index:999;
+  opacity:0;pointer-events:none;
+  transition:opacity .3s,transform .3s cubic-bezier(.22,1,.36,1);
+  white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── LOADING ── */
+.loading{display:flex;align-items:center;justify-content:center;padding:60px;gap:12px;color:rgba(255,255,255,0.3);font-size:.9rem}
+.spinner{width:20px;height:20px;border:2px solid rgba(0,255,224,0.2);border-top-color:var(--c);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .sidebar{width:60px}
+  .sidebar-logo span,.nav-label{display:none}
+  .main{margin-left:60px;padding:20px}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <img src="../logo.png" alt="ClassSphere">
+    <span>ClassSphere</span>
+  </div>
+
+  <nav>
+    <div class="nav-item active" onclick="showSection('classes')">
+      <span class="nav-icon">🏫</span>
+      <span class="nav-label">My Classes</span>
+    </div>
+    <div class="nav-item" onclick="showSection('attendance')">
+      <span class="nav-icon">📡</span>
+      <span class="nav-label">Attendance</span>
+    </div>
+    <div class="nav-item" onclick="showSection('marks')">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Marks</span>
+    </div>
+    <div class="nav-item" onclick="showSection('notes')">
+      <span class="nav-icon">📚</span>
+      <span class="nav-label">Notes</span>
+    </div>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="nav-item" onclick="logout()">
+      <span class="nav-icon">🚪</span>
+      <span class="nav-label">Logout</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='/profile.html'">
+  <span class="nav-icon">⚙️</span>
+  <span class="nav-label">My Profile</span>
+</div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>Teacher Dashboard</h1>
+      <p id="dateDisplay"></p>
+    </div>
+    <div class="topbar-right">
+      <div class="teacher-info">
+        <div class="teacher-avatar" id="teacherAvatar">T</div>
+        <span class="teacher-name" id="teacherName">Teacher</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-card c">
+      <div class="stat-num" id="totalClasses">0</div>
+      <div class="stat-label">Total Classes</div>
+    </div>
+    <div class="stat-card v">
+      <div class="stat-num" id="totalStudents">0</div>
+      <div class="stat-label">Total Students</div>
+    </div>
+    <div class="stat-card g">
+      <div class="stat-num" id="todayAttendance">0%</div>
+      <div class="stat-label">Today's Attendance</div>
+    </div>
+    <div class="stat-card w">
+      <div class="stat-num" id="totalNotes">0</div>
+      <div class="stat-label">Notes Uploaded</div>
+    </div>
+  </div>
+
+  <!-- CLASSES SECTION -->
+  <div id="section-classes">
+    <div class="section-header">
+      <div class="section-title">My Classes</div>
+      <button class="btn btn-primary" onclick="openCreateClass()">+ Create Class</button>
+    </div>
+    <div id="classesContainer">
+      <div class="loading"><div class="spinner"></div> Loading classes...</div>
+    </div>
+  </div>
+
+  <!-- ATTENDANCE SECTION -->
+  <div id="section-attendance" style="display:none">
+    <div class="section-header">
+      <div class="section-title">Mark Attendance</div>
+    </div>
+    <div id="attendanceContainer">
+      <div class="empty-state">
+        <div class="empty-icon">📡</div>
+        <div class="empty-title">Select a class to mark attendance</div>
+        <div class="empty-sub">Go to My Classes and click on a class first</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MARKS SECTION -->
+  <div id="section-marks" style="display:none">
+    <div class="section-header">
+      <div class="section-title">Marks</div>
+    </div>
+    <div id="marksContainer">
+      <div class="empty-state">
+        <div class="empty-icon">📊</div>
+        <div class="empty-title">Select a class to manage marks</div>
+        <div class="empty-sub">Go to My Classes and click on a class first</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOTES SECTION -->
+  <div id="section-notes" style="display:none">
+    <div class="section-header">
+      <div class="section-title">Notes & Files</div>
+    </div>
+    <div id="notesContainer">
+      <div class="empty-state">
+        <div class="empty-icon">📚</div>
+        <div class="empty-title">Select a class to manage notes</div>
+        <div class="empty-sub">Go to My Classes and click on a class first</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- CREATE CLASS MODAL -->
+<div class="modal-overlay" id="createClassModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('createClassModal')">✕</button>
+    <div class="modal-title">Create New Class</div>
+    <form id="createClassForm">
+      <div class="form-group">
+        <label>Class Name</label>
+        <input type="text" id="className" placeholder="e.g. Computer Science A" required>
+      </div>
+      <div class="form-group">
+        <label>Subject</label>
+        <input type="text" id="classSubject" placeholder="e.g. Data Structures" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Year</label>
+          <select id="classYear">
+            <option value="FY">FY</option>
+            <option value="SY">SY</option>
+            <option value="TY">TY</option>
+            <option value="LY">LY</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Division</label>
+          <input type="text" id="classDivision" placeholder="e.g. A">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:14px">
+        Create Class 🚀
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span id="toastIcon">✅</span>
+  <span id="toastMsg">Done!</span>
+</div>
+
+<script>
+const API = window.location.origin;
+let token = localStorage.getItem('token');
+let user = JSON.parse(localStorage.getItem('user') || '{}');
+let myClasses = [];
+
+// ── AUTH CHECK ──
+if (!token || !user || user.role !== 'teacher') {
+  window.location.href = '../login.html';
+}
+
+// ── INIT ──
+document.getElementById('teacherName').textContent = user.name || 'Teacher';
+document.getElementById('teacherAvatar').textContent = (user.name || 'T')[0].toUpperCase();
+document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+// ── LOAD CLASSES ──
+async function loadClasses() {
+  try {
+    const res = await fetch(`${API}/api/classes/my-classes`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    myClasses = data.classes || [];
+
+    // Update stats
+    document.getElementById('totalClasses').textContent = myClasses.length;
+    const totalStudents = myClasses.reduce((sum, c) => sum + c.students.length, 0);
+    document.getElementById('totalStudents').textContent = totalStudents;
+
+    renderClasses();
+  } catch (err) {
+    showToast('❌', 'Failed to load classes');
+  }
+}
+
+// ── RENDER CLASSES ──
+function renderClasses() {
+  const container = document.getElementById('classesContainer');
+  if (myClasses.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🏫</div>
+        <div class="empty-title">No classes yet</div>
+        <div class="empty-sub">Create your first class to get started!</div>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = `<div class="classes-grid">
+    ${myClasses.map(c => `
+      <div class="class-card" onclick="openClass('${c._id}', '${c.classCode}', '${c.name}', '${c.subject}')">
+        <div class="class-code">${c.classCode}</div>
+        <div class="class-name">${c.name}</div>
+        <div class="class-subject">${c.subject} • ${c.year || ''} ${c.division || ''}</div>
+        <div class="class-meta">
+          <div class="class-students"><span>${c.students.length}</span> Students</div>
+          <span style="font-size:.75rem;color:rgba(255,255,255,0.25)">Click to open →</span>
+        </div>
+      </div>
+    `).join('')}
+  </div>`;
+}
+
+// ── CREATE CLASS ──
+document.getElementById('createClassForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    const res = await fetch(`${API}/api/classes/create`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: document.getElementById('className').value,
+        subject: document.getElementById('classSubject').value,
+        year: document.getElementById('classYear').value,
+        division: document.getElementById('classDivision').value
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      closeModal('createClassModal');
+      showToast('✅', `Class created! Code: ${data.class.classCode}`);
+      loadClasses();
+      document.getElementById('createClassForm').reset();
+    } else {
+      showToast('❌', data.message);
+    }
+  } catch (err) {
+    showToast('❌', 'Failed to create class');
+  }
+});
+
+// ── OPEN CLASS ──
+function openClass(classId, classCode, className, subject) {
+  localStorage.setItem('currentClass', JSON.stringify({ classId, classCode, className, subject }));
+  window.location.href = `class.html`;
+}
+
+// ── SECTION SWITCHING ──
+function showSection(name) {
+  ['classes', 'attendance', 'marks', 'notes'].forEach(s => {
+    document.getElementById(`section-${s}`).style.display = s === name ? 'block' : 'none';
+  });
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+}
+
+// ── MODAL ──
+function openCreateClass() { document.getElementById('createClassModal').classList.add('show') }
+function closeModal(id) { document.getElementById(id).classList.remove('show') }
+
+// ── TOAST ──
+function showToast(icon, msg) {
+  document.getElementById('toastIcon').textContent = icon;
+  document.getElementById('toastMsg').textContent = msg;
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// ── LOGOUT ──
+function logout() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  window.location.href = '../login.html';
+}
+
+// ── START ──
+loadClasses();
+</script>
+</body>
+</html>

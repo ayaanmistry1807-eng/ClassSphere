@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ClassSphere • My Profile</title>
+<link rel="icon" type="image/png" href="favicon.png"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--c:#00ffe0;--v:#bf5fff;--g:#ff6b35;--gold:#ffd166;--bg:#04010f;--card:rgba(255,255,255,0.03);--border:rgba(255,255,255,0.07)}
+html,body{width:100%;min-height:100%;background:var(--bg);color:#fff;font-family:'Outfit',sans-serif;overflow-x:hidden}
+
+#cv{position:fixed;inset:0;z-index:0;pointer-events:none}
+.grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:180px}
+.glow-l{position:fixed;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(0,255,224,.05) 0%,transparent 65%);top:-150px;left:-150px;z-index:2;pointer-events:none}
+.glow-r{position:fixed;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(191,95,255,.04) 0%,transparent 65%);bottom:-100px;right:-100px;z-index:2;pointer-events:none}
+
+.page{position:relative;z-index:10;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 20px}
+
+.card{width:100%;max-width:580px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:20px;padding:40px;backdrop-filter:blur(20px);position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:20%;right:20%;height:1px;background:linear-gradient(90deg,transparent,rgba(0,255,224,.4),transparent)}
+
+/* TOP */
+.card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px}
+.card-top-left{display:flex;align-items:center;gap:16px}
+.profile-avatar{width:64px;height:64px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:800;color:#04010f;box-shadow:0 0 30px rgba(0,255,224,.3);flex-shrink:0}
+.profile-name{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:2px;line-height:1;margin-bottom:4px}
+.profile-role{font-size:.72rem;font-family:'Space Mono',monospace;letter-spacing:2px;text-transform:uppercase}
+.profile-role.student{color:var(--c)}
+.profile-role.teacher{color:var(--v)}
+.profile-role.parent{color:var(--gold)}
+
+.back-btn{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:8px;background:var(--card);border:1px solid var(--border);color:rgba(255,255,255,.5);font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s;text-decoration:none}
+.back-btn:hover{border-color:rgba(255,255,255,.3);color:#fff}
+
+/* FORM */
+.section-label{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:3px;color:rgba(255,255,255,.5);margin:24px 0 14px;display:flex;align-items:center;gap:10px}
+.section-label::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.06)}
+
+.fg{margin-bottom:14px}
+.fg label{display:block;font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:7px}
+.fg input{width:100%;padding:13px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#fff;font-family:'Outfit',sans-serif;font-size:.9rem;outline:none;transition:all .2s}
+.fg input:focus{border-color:rgba(0,255,224,.35);background:rgba(0,255,224,.03);box-shadow:0 0 0 3px rgba(0,255,224,.06)}
+.fg input::placeholder{color:rgba(255,255,255,.2)}
+.fg input:disabled{opacity:.4;cursor:not-allowed}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* READONLY BADGE */
+.readonly-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.6rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:rgba(255,255,255,.05);color:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.08);margin-left:8px;vertical-align:middle}
+
+/* BTN */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 28px;border-radius:8px;border:none;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:3px;cursor:pointer;transition:all .25s;clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%)}
+.btn-primary{background:linear-gradient(135deg,var(--c),#00c4b4);color:#04010f}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,255,224,.3)}
+.btn-teacher{background:linear-gradient(135deg,var(--v),#7c3aed);color:#fff}
+.btn-teacher:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(191,95,255,.3)}
+.btn-parent{background:linear-gradient(135deg,var(--gold),var(--g));color:#04010f}
+.btn-parent:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(255,209,102,.3)}
+.spin{display:none;width:16px;height:16px;border:2px solid rgba(0,0,0,.3);border-top-color:#000;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn.loading span{display:none}
+.btn.loading .spin{display:block}
+
+/* TOAST */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(6,2,24,.95);border:1px solid rgba(0,255,224,.2);border-radius:50px;padding:13px 28px;display:flex;align-items:center;gap:10px;font-size:.85rem;font-weight:600;backdrop-filter:blur(20px);z-index:999;opacity:0;pointer-events:none;transition:opacity .35s,transform .35s cubic-bezier(.22,1,.36,1);white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.loading-page{display:flex;align-items:center;justify-content:center;padding:60px;gap:12px;color:rgba(255,255,255,.3)}
+.spinner{width:20px;height:20px;border:2px solid rgba(0,255,224,.2);border-top-color:var(--c);border-radius:50%;animation:spin .7s linear infinite}
+</style>
+</head>
+<body>
+
+<canvas id="cv"></canvas>
+<div class="grain"></div>
+<div class="glow-l"></div>
+<div class="glow-r"></div>
+
+<div class="page">
+  <div class="card">
+
+    <div class="card-top">
+      <div class="card-top-left">
+        <div class="profile-avatar" id="profileAvatar">?</div>
+        <div>
+          <div class="profile-name" id="profileName">Loading...</div>
+          <div class="profile-role" id="profileRole">role</div>
+        </div>
+      </div>
+      <a href="#" class="back-btn" id="backBtn">← Back</a>
+    </div>
+
+    <div id="formContainer">
+      <div class="loading-page"><div class="spinner"></div> Loading profile...</div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <span id="toastIcon">✅</span>
+  <span id="toastMsg">Done!</span>
+</div>
+
+<script>
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+let W,H;
+function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight}
+resize();window.addEventListener('resize',resize);
+const STARS=Array.from({length:200},()=>({x:Math.random()*3000,y:Math.random()*2000,r:Math.random()*1.2+.2,a:Math.random()*.4+.1,p:Math.random()*Math.PI*2,sp:Math.random()*.004+.001}));
+function drawBG(){ctx.clearRect(0,0,W,H);STARS.forEach(s=>{s.p+=s.sp;ctx.beginPath();ctx.arc(s.x%W,s.y%H,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,255,${s.a*(.4+.6*Math.sin(s.p))})`;ctx.fill()});requestAnimationFrame(drawBG)}
+drawBG();
+
+const API=window.location.origin;
+const token=localStorage.getItem('token');
+let user=JSON.parse(localStorage.getItem('user')||'{}');
+
+if(!token){window.location.href='login.html'}
+
+// Back button
+const backMap={teacher:'/teacher/dashboard.html',student:'/student/dashboard.html',parent:'/parent/dashboard.html'};
+document.getElementById('backBtn').href=backMap[user.role]||'/';
+
+// Avatar colors
+const avatarColors={student:'linear-gradient(135deg,#00ffe0,#00c4b4)',teacher:'linear-gradient(135deg,#bf5fff,#7c3aed)',parent:'linear-gradient(135deg,#ffd166,#ff6b35)'};
+document.getElementById('profileAvatar').style.background=avatarColors[user.role]||avatarColors.student;
+
+// Load profile
+async function loadProfile(){
+  try{
+    const res=await fetch(`${API}/api/auth/profile`,{headers:{'Authorization':`Bearer ${token}`}});
+    const data=await res.json();
+    const u=data.user;
+    user={...user,...u};
+
+    document.getElementById('profileName').textContent=u.name||'User';
+    document.getElementById('profileAvatar').textContent=(u.name||'U')[0].toUpperCase();
+    document.getElementById('profileRole').textContent=u.role;
+    document.getElementById('profileRole').className=`profile-role ${u.role}`;
+
+    renderForm(u);
+  }catch(err){
+    showToast('❌','Failed to load profile');
+  }
+}
+
+function renderForm(u){
+  const isStudent=u.role==='student';
+  const isTeacher=u.role==='teacher';
+  const isParent=u.role==='parent';
+  const btnClass=isTeacher?'btn-teacher':isParent?'btn-parent':'btn-primary';
+
+  document.getElementById('formContainer').innerHTML=`
+    <form id="profileForm">
+
+      <div class="section-label">Basic Info</div>
+      <div class="fg">
+        <label>Full Name</label>
+        <input type="text" id="fname" value="${u.name||''}" placeholder="Your full name">
+      </div>
+      <div class="fg">
+        <label>Email Address <span class="readonly-badge">Cannot Change</span></label>
+        <input type="email" value="${u.email||''}" disabled>
+      </div>
+
+      ${isStudent||isTeacher?`
+        <div class="section-label">Contact</div>
+        <div class="fg">
+          <label>Phone Number</label>
+          <input type="text" id="fphone" value="${u.phone||''}" placeholder="e.g. 9876543210">
+        </div>
+      `:''}
+
+      ${isStudent?`
+        <div class="section-label">Student Details</div>
+        <div class="fg">
+          <label>Roll Number <span class="readonly-badge">Cannot Change</span></label>
+          <input type="text" value="${u.rollNumber||''}" disabled>
+        </div>
+        <div class="section-label">Parent Details</div>
+        <div class="fg">
+          <label>Parent Email <span style="font-size:.65rem;color:var(--c);margin-left:6px">← Important for alerts!</span></label>
+          <input type="email" id="fparentEmail" value="${u.parentEmail||''}" placeholder="parent@email.com">
+        </div>
+        <div class="fg">
+          <label>Parent WhatsApp</label>
+          <input type="text" id="fparentWA" value="${u.parentWhatsapp||''}" placeholder="+919876543210">
+        </div>
+      `:''}
+
+      ${isParent?`
+        <div class="section-label">Contact</div>
+        <div class="fg">
+          <label>WhatsApp Number</label>
+          <input type="text" id="fparentWA" value="${u.parentWhatsapp||''}" placeholder="+919876543210">
+        </div>
+      `:''}
+
+      <button type="submit" class="btn ${btnClass}" id="saveBtn" style="width:100%;justify-content:center;margin-top:8px">
+        <span>Save Changes ✓</span>
+        <div class="spin"></div>
+      </button>
+    </form>`;
+
+  document.getElementById('profileForm').addEventListener('submit',async e=>{
+    e.preventDefault();
+    const btn=document.getElementById('saveBtn');
+    btn.classList.add('loading');
+
+    const body={};
+    if(document.getElementById('fname'))body.name=document.getElementById('fname').value;
+    if(document.getElementById('fphone'))body.phone=document.getElementById('fphone').value;
+    if(document.getElementById('fparentEmail'))body.parentEmail=document.getElementById('fparentEmail').value;
+    if(document.getElementById('fparentWA'))body.parentWhatsapp=document.getElementById('fparentWA').value;
+
+    try{
+      const res=await fetch(`${API}/api/auth/update-profile`,{
+        method:'PUT',
+        headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},
+        body:JSON.stringify(body)
+      });
+      const data=await res.json();
+      btn.classList.remove('loading');
+      if(res.ok){
+        // Update localStorage
+        const updatedUser={...user,...data.user};
+        localStorage.setItem('user',JSON.stringify(updatedUser));
+        document.getElementById('profileName').textContent=data.user.name;
+        document.getElementById('profileAvatar').textContent=data.user.name[0].toUpperCase();
+        showToast('✅','Profile updated successfully!');
+      }else{
+        showToast('❌',data.message||'Update failed');
+      }
+    }catch(err){
+      btn.classList.remove('loading');
+      showToast('❌','Server error');
+    }
+  });
+}
+
+function showToast(icon,msg){
+  document.getElementById('toastIcon').textContent=icon;
+  document.getElementById('toastMsg').textContent=msg;
+  const t=document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+loadProfile();
+</script>
+</body>
+</html>

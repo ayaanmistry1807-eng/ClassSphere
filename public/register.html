@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ClassSphere • Register</title>
+<link rel="icon" type="image/png" href="favicon.png"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--c:#00ffe0;--v:#bf5fff;--g:#ff6b35;--bg:#04010f}
+html,body{width:100%;min-height:100%;background:var(--bg);color:#fff;font-family:'Outfit',sans-serif;overflow-x:hidden}
+
+#cv{position:fixed;inset:0;z-index:0}
+.grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:180px}
+.glow-l{position:fixed;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(0,255,224,.055) 0%,transparent 65%);top:-200px;left:-150px;z-index:2;pointer-events:none}
+.glow-r{position:fixed;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(191,95,255,.05) 0%,transparent 65%);bottom:-150px;right:-100px;z-index:2;pointer-events:none}
+.grid{position:fixed;inset:0;z-index:3;pointer-events:none;background-image:linear-gradient(rgba(0,255,224,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,224,.025) 1px,transparent 1px);background-size:55px 55px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 20%,transparent 100%)}
+
+.corner{position:fixed;width:50px;height:50px;z-index:10;pointer-events:none}
+.ctl{top:20px;left:20px;border-top:1px solid rgba(0,255,224,.25);border-left:1px solid rgba(0,255,224,.25)}
+.ctr{top:20px;right:20px;border-top:1px solid rgba(0,255,224,.25);border-right:1px solid rgba(0,255,224,.25)}
+.cbl{bottom:20px;left:20px;border-bottom:1px solid rgba(0,255,224,.25);border-left:1px solid rgba(0,255,224,.25)}
+.cbr{bottom:20px;right:20px;border-bottom:1px solid rgba(0,255,224,.25);border-right:1px solid rgba(0,255,224,.25)}
+
+.page{position:relative;z-index:10;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 20px}
+
+.card{
+  width:100%;max-width:520px;
+  background:rgba(255,255,255,.02);
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:16px;padding:40px;
+  backdrop-filter:blur(20px);
+}
+
+.card-top{text-align:center;margin-bottom:32px}
+.card-logo{width:60px;height:60px;border-radius:50%;border:1.5px solid rgba(0,255,224,.2);display:flex;align-items:center;justify-content:center;background:rgba(0,255,224,.04);margin:0 auto 16px}
+.card-logo img{width:70%;height:70%;object-fit:contain}
+.card-title{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:2px;background:linear-gradient(135deg,var(--c),var(--v));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.card-sub{font-size:.82rem;color:rgba(255,255,255,.35);margin-top:4px}
+
+/* ROLE SELECTOR */
+.roles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:28px}
+.role{padding:14px 8px;border-radius:8px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.02);cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:5px;position:relative;overflow:hidden}
+.role::after{content:'';position:absolute;top:0;left:20%;width:60%;height:1.5px;opacity:0;transition:opacity .3s;border-radius:0 0 4px 4px}
+.role[data-r="student"]::after{background:var(--c);box-shadow:0 0 12px var(--c)}
+.role[data-r="teacher"]::after{background:var(--v);box-shadow:0 0 12px var(--v)}
+.role[data-r="parent"]::after{background:var(--g);box-shadow:0 0 12px var(--g)}
+.role.active::after{opacity:1}
+.role[data-r="student"].active{border-color:rgba(0,255,224,.35);background:rgba(0,255,224,.04)}
+.role[data-r="teacher"].active{border-color:rgba(191,95,255,.35);background:rgba(191,95,255,.04)}
+.role[data-r="parent"].active{border-color:rgba(255,107,53,.35);background:rgba(255,107,53,.04)}
+.role-emoji{font-size:1.3rem}
+.role-lbl{font-size:.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.4)}
+.role[data-r="student"].active .role-lbl{color:var(--c)}
+.role[data-r="teacher"].active .role-lbl{color:var(--v)}
+.role[data-r="parent"].active .role-lbl{color:var(--g)}
+
+/* FORM */
+.fg{margin-bottom:14px}
+.fg label{display:block;font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:7px}
+.fg input{width:100%;padding:12px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#fff;font-family:'Outfit',sans-serif;font-size:.9rem;outline:none;transition:border-color .2s,box-shadow .2s}
+.fg input::placeholder{color:rgba(255,255,255,.18)}
+.fg input:focus{border-color:rgba(0,255,224,.3);box-shadow:0 0 0 3px rgba(0,255,224,.06)}
+.fg.error input{border-color:rgba(255,80,80,.5)}
+.ferr{font-size:.7rem;color:rgba(255,100,100,.8);margin-top:5px;display:none}
+.fg.error .ferr{display:block}
+
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* dynamic fields */
+.field-group{display:none}
+.field-group.show{display:block}
+
+.div{display:flex;align-items:center;gap:10px;margin:18px 0 14px}
+.div::before,.div::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.07)}
+.div span{font-family:'Space Mono',monospace;font-size:.58rem;letter-spacing:3px;color:rgba(255,255,255,.2)}
+
+.sbtn{width:100%;padding:15px;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:3px;cursor:pointer;transition:all .25s;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:10px}
+.sbtn{background:var(--c);color:#04010f}
+body.rt .sbtn{background:var(--v);color:#fff}
+body.rp .sbtn{background:var(--g);color:#04010f}
+.sbtn:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,255,224,.3)}
+body.rt .sbtn:hover{box-shadow:0 12px 30px rgba(191,95,255,.35)}
+body.rp .sbtn:hover{box-shadow:0 12px 30px rgba(255,107,53,.35)}
+
+.spin{display:none;width:16px;height:16px;border:2px solid rgba(0,0,0,.3);border-top-color:#000;border-radius:50%;animation:spin .7s linear infinite}
+body.rt .spin{border-color:rgba(255,255,255,.3);border-top-color:#fff}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sbtn.loading span{display:none}
+.sbtn.loading .spin{display:block}
+
+.login-link{text-align:center;margin-top:20px;font-size:.8rem;color:rgba(255,255,255,.3)}
+.login-link a{color:var(--c);text-decoration:none;font-weight:600}
+
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(6,2,20,.92);border:1px solid rgba(0,255,224,.2);border-radius:50px;padding:12px 26px;display:flex;align-items:center;gap:10px;font-size:.85rem;font-weight:500;color:#fff;backdrop-filter:blur(20px);z-index:1000;opacity:0;pointer-events:none;transition:opacity .4s,transform .4s cubic-bezier(.22,1,.36,1);white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body class="rs">
+
+<canvas id="cv"></canvas>
+<div class="grain"></div>
+<div class="glow-l"></div>
+<div class="glow-r"></div>
+<div class="grid"></div>
+<div class="corner ctl"></div>
+<div class="corner ctr"></div>
+<div class="corner cbl"></div>
+<div class="corner cbr"></div>
+
+<div class="page">
+  <div class="card">
+    <div class="card-top">
+      <div class="card-logo"><img src="logo.png" alt="ClassSphere"></div>
+      <div class="card-title">Create Account</div>
+      <div class="card-sub">Join the ClassSphere universe</div>
+    </div>
+
+    <!-- ROLE SELECTOR -->
+    <div class="roles">
+      <div class="role active" data-r="student" onclick="setRole('student')">
+        <span class="role-emoji">🎓</span>
+        <span class="role-lbl">Student</span>
+      </div>
+      <div class="role" data-r="teacher" onclick="setRole('teacher')">
+        <span class="role-emoji">🧑‍🏫</span>
+        <span class="role-lbl">Teacher</span>
+      </div>
+      <div class="role" data-r="parent" onclick="setRole('parent')">
+        <span class="role-emoji">👨‍👧</span>
+        <span class="role-lbl">Parent</span>
+      </div>
+    </div>
+
+    <form id="regForm" novalidate>
+      <!-- COMMON FIELDS -->
+      <div class="fg">
+        <label>Full Name</label>
+        <input type="text" id="name" placeholder="e.g. Ayaan Mistry" required>
+      </div>
+      <div class="fg">
+        <label>Email Address</label>
+        <input type="email" id="email" placeholder="e.g. ayaan@gmail.com" required>
+      </div>
+      <div class="fg">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="Min 6 characters" required>
+      </div>
+
+      <!-- STUDENT FIELDS -->
+      <div class="field-group show" id="studentFields">
+        <div class="div"><span>Student Details</span></div>
+        <div class="form-row">
+          <div class="fg">
+            <label>Roll Number</label>
+            <input type="text" id="rollNumber" placeholder="e.g. 2023CS001">
+          </div>
+          <div class="fg">
+            <label>Phone Number</label>
+            <input type="text" id="phone" placeholder="e.g. 9876543210">
+          </div>
+        </div>
+        <div class="div"><span>Parent Details</span></div>
+        <div class="fg">
+          <label>Parent Email</label>
+          <input type="email" id="parentEmail" placeholder="Parent's email for alerts">
+        </div>
+        <div class="fg">
+          <label>Parent WhatsApp</label>
+          <input type="text" id="parentWhatsapp" placeholder="e.g. +919876543210">
+        </div>
+      </div>
+
+      <!-- TEACHER FIELDS -->
+      <div class="field-group" id="teacherFields">
+        <div class="div"><span>Teacher Details</span></div>
+        <div class="fg">
+          <label>Phone Number</label>
+          <input type="text" id="teacherPhone" placeholder="e.g. 9876543210">
+        </div>
+      </div>
+
+      <!-- PARENT FIELDS -->
+      <div class="field-group" id="parentFields">
+        <div class="div"><span>Parent Details</span></div>
+        <div class="fg">
+          <label>WhatsApp Number</label>
+          <input type="text" id="parentWA" placeholder="e.g. +919876543210">
+        </div>
+        <div class="fg">
+          <label>Child's Roll Number</label>
+          <input type="text" id="childRoll" placeholder="Your child's roll number">
+        </div>
+      </div>
+
+      <button type="submit" class="sbtn" id="sbtn">
+        <span>Create Account 🚀</span>
+        <div class="spin"></div>
+      </button>
+    </form>
+
+    <div class="login-link">
+      Already have an account? <a href="login.html">Sign in here</a>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <span id="tIcon">✅</span>
+  <span id="tMsg">Account created!</span>
+</div>
+
+<script>
+// Canvas stars
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+let W,H;
+function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight}
+resize();window.addEventListener('resize',resize);
+const STARS=Array.from({length:200},()=>({x:Math.random()*3000,y:Math.random()*2000,r:Math.random()*1.2+.2,a:Math.random()*.5+.1,p:Math.random()*Math.PI*2,sp:Math.random()*.004+.001}));
+function drawBG(){ctx.clearRect(0,0,W,H);STARS.forEach(s=>{s.p+=s.sp;ctx.beginPath();ctx.arc(s.x%W,s.y%H,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,255,${s.a*(0.4+0.6*Math.sin(s.p))})`;ctx.fill()});requestAnimationFrame(drawBG)}
+drawBG();
+
+let activeRole = 'student';
+
+function setRole(role) {
+  activeRole = role;
+  document.querySelectorAll('.role').forEach(r => r.classList.toggle('active', r.dataset.r === role));
+  document.body.className = role === 'teacher' ? 'rt' : role === 'parent' ? 'rp' : 'rs';
+  document.getElementById('studentFields').classList.toggle('show', role === 'student');
+  document.getElementById('teacherFields').classList.toggle('show', role === 'teacher');
+  document.getElementById('parentFields').classList.toggle('show', role === 'parent');
+}
+
+document.getElementById('regForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = document.getElementById('sbtn');
+  btn.classList.add('loading');
+
+  const body = {
+    name: document.getElementById('name').value,
+    email: document.getElementById('email').value,
+    password: document.getElementById('password').value,
+    role: activeRole,
+  };
+
+  if (activeRole === 'student') {
+    body.rollNumber = document.getElementById('rollNumber').value;
+    body.phone = document.getElementById('phone').value;
+    body.parentEmail = document.getElementById('parentEmail').value;
+    body.parentWhatsapp = document.getElementById('parentWhatsapp').value;
+  } else if (activeRole === 'teacher') {
+    body.phone = document.getElementById('teacherPhone').value;
+  } else if (activeRole === 'parent') {
+    body.parentWhatsapp = document.getElementById('parentWA').value;
+  }
+
+  try {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    btn.classList.remove('loading');
+
+    if (res.ok) {
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      showToast('✅', 'Account created! Redirecting...');
+      setTimeout(() => {
+        window.location.href = `/${activeRole}/dashboard.html`;
+      }, 1200);
+    } else {
+      showToast('❌', data.message || 'Registration failed');
+    }
+  } catch (err) {
+    btn.classList.remove('loading');
+    showToast('❌', 'Server error. Is the server running?');
+  }
+});
+
+function showToast(icon, msg) {
+  document.getElementById('tIcon').textContent = icon;
+  document.getElementById('tMsg').textContent = msg;
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+</script>
+</body>
+</html>
