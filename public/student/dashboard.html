@@ -576,6 +576,10 @@ async function loadClasses(){
     }
   }catch(err){showToast('❌','Failed to load classes')}
 }
+function openClass(classId,className,subject){
+  localStorage.setItem('studentCurrentClass',JSON.stringify({classId,className,subject}));
+  window.location.href='class.html';
+}
 
 const ICONS=['📐','🔬','💻','📖','🎨','⚗️','🌍','📝'];
 const COLS=['c','v','g','c','v','g','c','v'];
@@ -583,7 +587,7 @@ const COLS=['c','v','g','c','v','g','c','v'];
 function missionCardHTML(cl,i){
   const icon=ICONS[i%ICONS.length];
   const col=COLS[i%COLS.length];
-  return `<div class="mission-card" onclick="showToast('🚀','Loading ${cl.name}...')">
+  return `<div class="mission-card" onclick="openClass('${cl._id}','${cl.name}','${cl.subject}')">
     <div class="mc-top">
       <div class="mc-icon ${col}">${icon}</div>
       <span class="mc-status active">Active</span>

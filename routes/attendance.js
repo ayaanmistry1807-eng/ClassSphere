@@ -8,8 +8,7 @@ const nodemailer = require('nodemailer');
 // Email + WhatsApp notification
 async function notifyParent(studentName, subject, date, parentEmail, parentWhatsapp) {
   try {
-    // Email notification
-    if (parentEmail) {
+    if (parentEmail && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
       const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
@@ -17,7 +16,6 @@ async function notifyParent(studentName, subject, date, parentEmail, parentWhats
           pass: process.env.EMAIL_PASS
         }
       });
-
       await transporter.sendMail({
         from: process.env.EMAIL_USER,
         to: parentEmail,
@@ -34,12 +32,9 @@ async function notifyParent(studentName, subject, date, parentEmail, parentWhats
             </div>
             <p>Please ensure regular attendance.</p>
             <p style="color:#00ffe0;">— ClassSphere Team</p>
-          </div>
-        `
+          </div>`
       });
     }
-
-    // WhatsApp Click to Chat
     if (parentWhatsapp) {
       const phone = parentWhatsapp.replace(/[^0-9]/g, '');
       const message = encodeURIComponent(
@@ -48,7 +43,6 @@ async function notifyParent(studentName, subject, date, parentEmail, parentWhats
       const whatsappLink = `https://wa.me/${phone}?text=${message}`;
       console.log(`📱 WhatsApp Link for ${studentName}'s parent: ${whatsappLink}`);
     }
-
   } catch (error) {
     console.log('Notification error:', error.message);
   }
@@ -63,44 +57,61 @@ router.post('/mark', auth, async (req, res) => {
       return res.status(403).json({ message: 'Only teachers can mark attendance' });
     }
 
-    // Check if attendance already marked for this date and lecture
-    const existing = await Attendance.findOne({ classId, date, lecture });
-    if (existing) {
-      return res.status(400).json({ message: 'Attendance already marked for this lecture' });
-    }
-
-    // Get class data for parent details
     const classData = await Class.findById(classId);
 
+    // Check if attendance already marked
+    const existing = await Attendance.findOne({ classId, date, lecture });
+    if (existing) {
+      existing.records = records;
+      existing.subject = subject;
+
+      for (const record of records) {
+        if (record.status === 'absent') {
+          const student = classData.students.find(
+            s => s.userId.toString() === record.studentId
+          );
+          if (student && student.parentEmail) {
+            await notifyParent(student.name, subject, date, student.parentEmail, student.parentWhatsapp);
+            record.parentNotified = true;
+            record.notifiedAt = new Date();
+          }
+        }
+      }
+      await existing.save();
+      return res.status(200).json({
+        message: 'Attendance updated successfully',
+        attendance: existing,
+        absentStudents: records
+          .filter(r => r.status === 'absent')
+          .map(r => {
+            const s = classData.students.find(st => st.userId.toString() === r.studentId);
+            return { name: s?.name, parentWhatsapp: s?.parentWhatsapp };
+          })
+      });
+    }
+
     const attendance = new Attendance({
-      classId,
-      date,
-      lecture,
-      subject,
-      records,
+      classId, date, lecture, subject, records,
       takenBy: req.user.userId
     });
 
-    await attendance.save();
-
     // Notify parents of absent students
+    const absentList = [];
     for (const record of records) {
       if (record.status === 'absent') {
         const student = classData.students.find(
           s => s.userId.toString() === record.studentId
         );
-        if (student && student.parentEmail) {
-          await notifyParent(
-            student.name,
-            subject,
-            date,
-            student.parentEmail,
-            student.parentWhatsapp
-          );
-
-          // Update notified status
-          record.parentNotified = true;
-          record.notifiedAt = new Date();
+        if (student) {
+          if (student.parentEmail) {
+            await notifyParent(student.name, subject, date, student.parentEmail, student.parentWhatsapp);
+            record.parentNotified = true;
+            record.notifiedAt = new Date();
+          }
+          absentList.push({
+            name: student.name,
+            parentWhatsapp: student.parentWhatsapp
+          });
         }
       }
     }
@@ -109,7 +120,8 @@ router.post('/mark', auth, async (req, res) => {
 
     res.status(201).json({
       message: 'Attendance marked successfully',
-      attendance
+      attendance,
+      absentStudents: absentList
     });
 
   } catch (error) {

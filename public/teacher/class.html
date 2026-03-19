@@ -41,7 +41,6 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:#fff;min-height:
 .tab{flex:1;padding:10px;text-align:center;border-radius:7px;cursor:pointer;font-size:.85rem;font-weight:600;color:rgba(255,255,255,.35);transition:all .2s;border:1px solid transparent}
 .tab.active{background:rgba(0,255,224,.08);color:var(--c);border-color:rgba(0,255,224,.2)}
 .tab:hover:not(.active){color:rgba(255,255,255,.6)}
-
 .tab-content{display:none}
 .tab-content.active{display:block}
 
@@ -70,9 +69,8 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .att-btn.late.selected{background:rgba(191,95,255,.15);border-color:var(--v)}
 
 .marks-form{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px}
-
 .notes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
-.note-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;transition:all .2s;position:relative}
+.note-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;transition:all .2s}
 .note-card:hover{border-color:rgba(0,255,224,.2);transform:translateY(-2px)}
 .note-type{display:inline-block;padding:3px 10px;border-radius:4px;font-size:.65rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
 .note-type.pdf{background:rgba(255,80,80,.1);color:#ff5050;border:1px solid rgba(255,80,80,.2)}
@@ -172,7 +170,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <div class="class-title" id="classTitle">Loading...</div>
         <div class="class-meta-row" id="classMeta"></div>
       </div>
-      <div class="class-code-badge" id="codeBadge" onclick="copyCode()">
+      <div class="class-code-badge" onclick="copyCode()">
         <span>📋</span>
         <span id="classCodeDisplay">------</span>
         <span style="font-size:.7rem;color:rgba(255,255,255,.4)">Copy Code</span>
@@ -453,24 +451,21 @@ async function submitAttendance(){
     });
     const d=await r.json();
     if(r.ok){
-      showToast('✅','Attendance marked! Parents notified 📧');
+      showToast('✅',d.message+' Parents notified 📧');
       loadAttendanceHistory();
 
       // Show WhatsApp buttons for absent students
-      const absentStudents=records.filter(rec=>rec.status==='absent');
-      if(absentStudents.length>0){
-        absentStudents.forEach(absent=>{
-          const student=students.find(s=>s.userId===absent.studentId);
-          if(student?.parentWhatsapp){
-            const phone=student.parentWhatsapp.replace(/[^0-9]/g,'');
-            const message=encodeURIComponent(
-              `🚨 *ClassSphere Absence Alert*\n\nDear Parent,\n\nYour child *${student.name}* was marked *ABSENT* in:\n\n📚 Subject: ${subject}\n📅 Date: ${date}\n\nPlease ensure regular attendance.\n\n— ClassSphere Team`
-            );
-            const link=`https://wa.me/${phone}?text=${message}`;
-            showWhatsAppAlert(student.name,link);
-          }
-        });
-      }
+      const absentStudents=d.absentStudents||[];
+      absentStudents.forEach(absent=>{
+        if(absent?.parentWhatsapp){
+          const phone=absent.parentWhatsapp.replace(/[^0-9]/g,'');
+          const message=encodeURIComponent(
+            `🚨 *ClassSphere Absence Alert*\n\nDear Parent,\n\nYour child *${absent.name}* was marked *ABSENT* in:\n\n📚 Subject: ${subject}\n📅 Date: ${date}\n\nPlease ensure regular attendance.\n\n— ClassSphere Team`
+          );
+          const link=`https://wa.me/${phone}?text=${message}`;
+          showWhatsAppAlert(absent.name,link);
+        }
+      });
     }else{
       showToast('❌',d.message);
     }

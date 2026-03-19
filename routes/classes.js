@@ -23,7 +23,6 @@ router.post('/create', auth, async (req, res) => {
       return res.status(403).json({ message: 'Only teachers can create classes' });
     }
 
-    // Generate unique code
     let classCode;
     let exists = true;
     while (exists) {
@@ -32,10 +31,7 @@ router.post('/create', auth, async (req, res) => {
     }
 
     const newClass = new Class({
-      name,
-      subject,
-      division,
-      year,
+      name, subject, division, year,
       classCode,
       teacher: req.user.userId,
       students: []
@@ -63,7 +59,58 @@ router.get('/my-classes', auth, async (req, res) => {
   }
 });
 
-// Get single class details
+// Get classes for student — MUST be before /:classCode
+router.get('/student/my-classes', auth, async (req, res) => {
+  try {
+    const classes = await Class.find({
+      'students.userId': req.user.userId
+    }).populate('teacher', 'name email');
+    res.json({ classes });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get leaderboard for a class — MUST be before /:classCode
+router.get('/leaderboard/:classId', auth, async (req, res) => {
+  try {
+    const classData = await Class.findById(req.params.classId);
+    if (!classData) {
+      return res.status(404).json({ message: 'Class not found' });
+    }
+    const students = await Promise.all(
+      classData.students.map(async (s) => {
+        const user = await User.findById(s.userId);
+        return {
+          userId: s.userId,
+          name: s.name,
+          rollNumber: s.rollNumber,
+          xp: user?.xp || 0,
+          badges: user?.badges || []
+        };
+      })
+    );
+    const sorted = students.sort((a, b) => b.xp - a.xp);
+    res.json({ leaderboard: sorted });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get global leaderboard — MUST be before /:classCode
+router.get('/leaderboard-global/all', auth, async (req, res) => {
+  try {
+    const students = await User.find({ role: 'student' })
+      .select('name email rollNumber xp badges')
+      .sort({ xp: -1 })
+      .limit(20);
+    res.json({ leaderboard: students });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get single class details — MUST be after all specific routes
 router.get('/:classCode', auth, async (req, res) => {
   try {
     const classData = await Class.findOne({ classCode: req.params.classCode })
@@ -91,7 +138,6 @@ router.post('/join', auth, async (req, res) => {
       return res.status(404).json({ message: 'Invalid class code' });
     }
 
-    // Check if already joined
     const alreadyJoined = classData.students.find(
       s => s.userId.toString() === req.user.userId
     );
@@ -99,19 +145,13 @@ router.post('/join', auth, async (req, res) => {
       return res.status(400).json({ message: 'Already joined this class' });
     }
 
-    // Add student to class
     classData.students.push({
       userId: req.user.userId,
-      name,
-      rollNumber,
-      phone,
-      parentEmail,
-      parentWhatsapp
+      name, rollNumber, phone, parentEmail, parentWhatsapp
     });
 
     await classData.save();
 
-    // Add class to student's profile
     await User.findByIdAndUpdate(req.user.userId, {
       $push: { classes: classData._id }
     });
@@ -126,55 +166,4 @@ router.post('/join', auth, async (req, res) => {
   }
 });
 
-// Get classes for student
-router.get('/student/my-classes', auth, async (req, res) => {
-  try {
-    const classes = await Class.find({
-      'students.userId': req.user.userId
-    }).populate('teacher', 'name email');
-    res.json({ classes });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-});
-// Get leaderboard for a class
-router.get('/leaderboard/:classId', auth, async (req, res) => {
-  try {
-    const classData = await Class.findById(req.params.classId);
-    if (!classData) {
-      return res.status(404).json({ message: 'Class not found' });
-    }
-    const User = require('../models/user');
-    const students = await Promise.all(
-      classData.students.map(async (s) => {
-        const user = await User.findById(s.userId);
-        return {
-          userId: s.userId,
-          name: s.name,
-          rollNumber: s.rollNumber,
-          xp: user?.xp || 0,
-          badges: user?.badges || []
-        };
-      })
-    );
-    const sorted = students.sort((a, b) => b.xp - a.xp);
-    res.json({ leaderboard: sorted });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-});
-
-// Get global leaderboard
-router.get('/leaderboard-global/all', auth, async (req, res) => {
-  try {
-    const User = require('../models/user');
-    const students = await User.find({ role: 'student' })
-      .select('name email rollNumber xp badges')
-      .sort({ xp: -1 })
-      .limit(20);
-    res.json({ leaderboard: students });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-});
 module.exports = router;

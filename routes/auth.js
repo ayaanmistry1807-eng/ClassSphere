@@ -4,21 +4,19 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const auth = require('../middleware/auth');
+
 // Register
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password, role, rollNumber, phone, parentEmail, parentWhatsapp } = req.body;
 
-    // Check if user exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'Email already registered' });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
     const user = new User({
       name,
       email,
@@ -32,7 +30,6 @@ router.post('/register', async (req, res) => {
 
     await user.save();
 
-    // Generate token
     const token = jwt.sign(
       { userId: user._id, role: user.role },
       process.env.JWT_SECRET,
@@ -62,19 +59,16 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password, role } = req.body;
 
-    // Find user
     const user = await User.findOne({ email, role });
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Generate token
     const token = jwt.sign(
       { userId: user._id, role: user.role },
       process.env.JWT_SECRET,
@@ -99,25 +93,17 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
-// Get child data for parent
-router.get('/child', auth, async (req, res) => {
+
+// Get my profile
+router.get('/profile', auth, async (req, res) => {
   try {
-    if (req.user.role !== 'parent') {
-      return res.status(403).json({ message: 'Only parents can access this' });
-    }
-    const parent = await User.findById(req.user.userId);
-    const child = await User.findOne({ 
-      parentEmail: parent.email, 
-      role: 'student' 
-    });
-    if (!child) {
-      return res.status(404).json({ message: 'No child linked' });
-    }
-    res.json({ child });
+    const user = await User.findById(req.user.userId).select('-password');
+    res.json({ user });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
+
 // Update profile
 router.put('/update-profile', auth, async (req, res) => {
   try {
@@ -154,13 +140,53 @@ router.put('/update-profile', auth, async (req, res) => {
   }
 });
 
-// Get my profile
-router.get('/profile', auth, async (req, res) => {
+// Get child data for parent
+router.get('/child', auth, async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId).select('-password');
-    res.json({ user });
+    if (req.user.role !== 'parent') {
+      return res.status(403).json({ message: 'Only parents can access this' });
+    }
+
+    const parent = await User.findById(req.user.userId);
+
+    // First check User model
+    let child = await User.findOne({
+      parentEmail: { $regex: new RegExp(`^${parent.email}$`, 'i') },
+      role: 'student'
+    });
+
+    if (child) {
+      return res.json({ child });
+    }
+
+    // If not found in User model check Class students array
+    const Class = require('../models/class');
+    const classes = await Class.find({
+      'students.parentEmail': { $regex: new RegExp(`^${parent.email}$`, 'i') }
+    });
+
+    if (classes.length > 0) {
+      const studentData = classes[0].students.find(
+        s => s.parentEmail?.toLowerCase() === parent.email.toLowerCase()
+      );
+      if (studentData) {
+        const studentUser = await User.findById(studentData.userId);
+        if (studentUser) {
+          return res.json({
+            child: {
+              ...studentUser.toObject(),
+              rollNumber: studentData.rollNumber || studentUser.rollNumber
+            }
+          });
+        }
+      }
+    }
+
+    return res.status(404).json({ message: 'No child linked' });
+
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
+
 module.exports = router;

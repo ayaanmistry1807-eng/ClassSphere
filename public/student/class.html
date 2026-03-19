@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ClassSphere • Class View</title>
+<link rel="icon" type="image/png" href="../favicon.png"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--c:#00ffe0;--v:#bf5fff;--g:#ff6b35;--gold:#ffd166;--bg:#04010f;--card:rgba(255,255,255,0.03);--border:rgba(255,255,255,0.07)}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:#fff;min-height:100vh}
+
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:rgba(4,1,15,0.95);border-right:1px solid rgba(0,255,224,0.08);display:flex;flex-direction:column;z-index:100;backdrop-filter:blur(30px)}
+.sidebar-brand{padding:24px 20px;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;gap:12px}
+.sidebar-brand img{width:34px;height:34px;border-radius:50%;border:1.5px solid rgba(0,255,224,0.25)}
+.sidebar-brand-name{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:2px;background:linear-gradient(135deg,var(--c),var(--v));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 16px;margin:2px 8px;border-radius:10px;cursor:pointer;font-size:.85rem;font-weight:600;color:rgba(255,255,255,0.4);transition:all .2s;border:1px solid transparent}
+.nav-item:hover{background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.8)}
+.nav-item.active{background:linear-gradient(135deg,rgba(0,255,224,0.08),rgba(191,95,255,0.05));color:var(--c);border-color:rgba(0,255,224,0.15)}
+.nav-icon{font-size:1rem;width:18px;text-align:center}
+.sidebar-bottom{margin-top:auto;padding:12px 8px;border-top:1px solid rgba(255,255,255,0.05)}
+
+.main{margin-left:220px;padding:28px 32px;min-height:100vh}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+.back-btn{display:inline-flex;align-items:center;gap:8px;color:rgba(255,255,255,.4);font-size:.85rem;cursor:pointer;transition:color .2s;background:none;border:none;font-family:'Outfit',sans-serif}
+.back-btn:hover{color:var(--c)}
+
+.class-header{background:linear-gradient(135deg,rgba(0,255,224,0.06),rgba(191,95,255,0.04),rgba(4,1,15,1));border:1px solid rgba(0,255,224,0.12);border-radius:20px;padding:28px;margin-bottom:28px;position:relative;overflow:hidden}
+.class-header::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--c),var(--v))}
+.class-title{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:2px;margin-bottom:6px}
+.class-subject{font-size:.85rem;color:rgba(255,255,255,.45);font-family:'Space Mono',monospace;letter-spacing:1px}
+
+.tabs{display:flex;gap:4px;margin-bottom:24px;background:rgba(255,255,255,.02);padding:4px;border-radius:10px;border:1px solid var(--border)}
+.tab{flex:1;padding:10px;text-align:center;border-radius:7px;cursor:pointer;font-size:.85rem;font-weight:600;color:rgba(255,255,255,.35);transition:all .2s;border:1px solid transparent}
+.tab.active{background:rgba(0,255,224,.08);color:var(--c);border-color:rgba(0,255,224,.2)}
+.tab:hover:not(.active){color:rgba(255,255,255,.6)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+.table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse}
+th{padding:12px 16px;text-align:left;font-size:.72rem;font-family:'Space Mono',monospace;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.3);background:rgba(255,255,255,.02);border-bottom:1px solid var(--border)}
+td{padding:14px 16px;font-size:.88rem;border-bottom:1px solid rgba(255,255,255,.04);color:rgba(255,255,255,.75)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+
+.grade-pill{padding:3px 12px;border-radius:50px;font-size:.72rem;font-weight:700;display:inline-block}
+.grade-a{background:rgba(0,255,224,.1);color:var(--c);border:1px solid rgba(0,255,224,.25)}
+.grade-b{background:rgba(191,95,255,.1);color:var(--v);border:1px solid rgba(191,95,255,.25)}
+.grade-c{background:rgba(255,209,102,.1);color:var(--gold);border:1px solid rgba(255,209,102,.25)}
+.grade-f{background:rgba(255,107,53,.1);color:var(--g);border:1px solid rgba(255,107,53,.25)}
+
+.att-overview{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:24px}
+.att-ring-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;text-align:center;transition:transform .2s}
+.att-ring-card:hover{transform:translateY(-3px)}
+.ring-wrap{width:90px;height:90px;margin:0 auto 12px;position:relative}
+.ring-svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:rgba(255,255,255,0.05);stroke-width:8}
+.ring-fill{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset 1.5s cubic-bezier(.22,1,.36,1)}
+.ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-pct{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;line-height:1}
+.ring-lbl-small{font-size:.55rem;color:rgba(255,255,255,.35);font-family:'Space Mono',monospace}
+.att-ring-label{font-size:.78rem;font-weight:600;color:rgba(255,255,255,.7);margin-bottom:2px}
+.att-ring-sub{font-size:.7rem;color:rgba(255,255,255,.3)}
+
+.notes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.note-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;transition:all .25s;position:relative;overflow:hidden}
+.note-card:hover{border-color:rgba(0,255,224,.2);transform:translateY(-3px)}
+.note-card::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px}
+.note-card.pdf::before{background:var(--g)}
+.note-card.image::before{background:var(--c)}
+.note-card.doc::before{background:var(--v)}
+.note-type-tag{display:inline-block;padding:3px 10px;border-radius:4px;font-size:.62rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
+.note-type-tag.pdf{background:rgba(255,107,53,.1);color:var(--g);border:1px solid rgba(255,107,53,.2)}
+.note-type-tag.image{background:rgba(0,255,224,.1);color:var(--c);border:1px solid rgba(0,255,224,.2)}
+.note-type-tag.doc{background:rgba(191,95,255,.1);color:var(--v);border:1px solid rgba(191,95,255,.2)}
+.note-title{font-size:.92rem;font-weight:700;margin-bottom:4px}
+.note-meta{font-size:.72rem;color:rgba(255,255,255,.3);margin-bottom:14px}
+.note-btns{display:flex;gap:6px}
+.note-btn{padding:6px 12px;border-radius:6px;border:1px solid var(--border);font-size:.75rem;font-weight:600;color:rgba(255,255,255,.5);text-decoration:none;transition:all .2s}
+.note-btn:hover{border-color:rgba(0,255,224,.3);color:var(--c)}
+
+.lb-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.lb-row{display:flex;align-items:center;gap:16px;padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s}
+.lb-row:last-child{border-bottom:none}
+.lb-row:hover{background:rgba(255,255,255,.02)}
+.lb-row.me{background:linear-gradient(135deg,rgba(0,255,224,.06),rgba(191,95,255,.04));border-left:3px solid var(--c)}
+.lb-rank{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;width:36px;text-align:center;flex-shrink:0}
+.lb-rank.gold{color:var(--gold)}
+.lb-rank.silver{color:#c0c0c0}
+.lb-rank.bronze{color:#cd7f32}
+.lb-rank.normal{color:rgba(255,255,255,.3)}
+.lb-avatar{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--c),var(--v));display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:800;color:#04010f;flex-shrink:0}
+.lb-info{flex:1}
+.lb-name{font-size:.92rem;font-weight:700;margin-bottom:2px}
+.lb-roll{font-size:.72rem;color:rgba(255,255,255,.35);font-family:'Space Mono',monospace}
+.lb-xp{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--gold);text-align:right}
+.lb-xp-label{font-size:.6rem;color:rgba(255,255,255,.3);text-align:right;font-family:'Space Mono',monospace}
+
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+.stat-card{padding:18px;border-radius:14px;background:var(--card);border:1px solid var(--border);position:relative;overflow:hidden;text-align:center}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat-card.c::before{background:linear-gradient(90deg,var(--c),transparent)}
+.stat-card.v::before{background:linear-gradient(90deg,var(--v),transparent)}
+.stat-card.g::before{background:linear-gradient(90deg,var(--g),transparent)}
+.stat-num{font-family:'Bebas Neue',sans-serif;font-size:2rem;line-height:1;margin-bottom:4px}
+.stat-card.c .stat-num{color:var(--c)}
+.stat-card.v .stat-num{color:var(--v)}
+.stat-card.g .stat-num{color:var(--g)}
+.stat-label{font-size:.68rem;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:1.5px;font-family:'Space Mono',monospace}
+
+.empty-state{text-align:center;padding:50px 20px;border:1px dashed rgba(255,255,255,.07);border-radius:16px}
+.empty-icon{font-size:2.5rem;margin-bottom:12px}
+.empty-title{font-size:1rem;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:6px}
+.empty-sub{font-size:.82rem;color:rgba(255,255,255,.25)}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(10,5,32,.95);border:1px solid rgba(0,255,224,.2);border-radius:50px;padding:12px 24px;display:flex;align-items:center;gap:10px;font-size:.85rem;font-weight:500;backdrop-filter:blur(20px);z-index:999;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s cubic-bezier(.22,1,.36,1);white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.loading{display:flex;align-items:center;justify-content:center;padding:40px;gap:12px;color:rgba(255,255,255,.3);font-size:.9rem}
+.spinner{width:18px;height:18px;border:2px solid rgba(0,255,224,.2);border-top-color:var(--c);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:768px){
+  .sidebar{width:60px}
+  .sidebar-brand-name,.nav-label{display:none}
+  .main{margin-left:60px;padding:16px}
+  .att-overview{grid-template-columns:1fr}
+  .stat-row{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+    <aside class="sidebar">
+  <div class="sidebar-brand">
+    <img src="../logo.png" alt="ClassSphere">
+    <span class="sidebar-brand-name">ClassSphere</span>
+  </div>
+  <nav>
+    <div class="nav-item" onclick="window.location.href='dashboard.html'">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Home Base</span>
+    </div>
+    <div class="nav-item active">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label">Class View</span>
+    </div>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="nav-item" onclick="window.location.href='/profile.html'">
+      <span class="nav-icon">⚙️</span>
+      <span class="nav-label">Edit Profile</span>
+    </div>
+    <div class="nav-item" onclick="logout()">
+      <span class="nav-icon">🚪</span>
+      <span class="nav-label">Logout</span>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <button class="back-btn" onclick="window.location.href='dashboard.html'">← Back to Dashboard</button>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--c),var(--v));display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:#04010f" id="studentAvatar">S</div>
+      <span style="font-size:.85rem;font-weight:600" id="studentName">Student</span>
+    </div>
+  </div>
+
+  <!-- CLASS HEADER -->
+  <div class="class-header">
+    <div class="class-title" id="classTitle">Loading...</div>
+    <div class="class-subject" id="classSubject"></div>
+  </div>
+
+  <!-- STATS ROW -->
+  <div class="stat-row">
+    <div class="stat-card c">
+      <div class="stat-num" id="statAttendance">—</div>
+      <div class="stat-label">Attendance</div>
+    </div>
+    <div class="stat-card v">
+      <div class="stat-num" id="statAvgMarks">—</div>
+      <div class="stat-label">Avg Marks</div>
+    </div>
+    <div class="stat-card g">
+      <div class="stat-num" id="statRank">—</div>
+      <div class="stat-label">Class Rank</div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('marks')">📊 Marks</div>
+    <div class="tab" onclick="switchTab('attendance')">📡 Attendance</div>
+    <div class="tab" onclick="switchTab('notes')">📚 Notes</div>
+    <div class="tab" onclick="switchTab('leaderboard')">🏆 Leaderboard</div>
+  </div>
+
+  <!-- MARKS TAB -->
+  <div class="tab-content active" id="tab-marks">
+    <div id="marksContainer">
+      <div class="loading"><div class="spinner"></div> Loading marks...</div>
+    </div>
+  </div>
+
+  <!-- ATTENDANCE TAB -->
+  <div class="tab-content" id="tab-attendance">
+    <div id="attendanceContainer">
+      <div class="loading"><div class="spinner"></div> Loading attendance...</div>
+    </div>
+  </div>
+
+  <!-- NOTES TAB -->
+  <div class="tab-content" id="tab-notes">
+    <div id="notesContainer">
+      <div class="loading"><div class="spinner"></div> Loading notes...</div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD TAB -->
+  <div class="tab-content" id="tab-leaderboard">
+    <div id="leaderboardContainer">
+      <div class="loading"><div class="spinner"></div> Loading leaderboard...</div>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast">
+  <span id="toastIcon">✅</span>
+  <span id="toastMsg">Done!</span>
+</div>
+<script>
+const API=window.location.origin;
+const token=localStorage.getItem('token');
+const user=JSON.parse(localStorage.getItem('user')||'{}');
+const currentClass=JSON.parse(localStorage.getItem('studentCurrentClass')||'{}');
+
+if(!token||user.role!=='student')window.location.href='../login.html';
+if(!currentClass.classId)window.location.href='dashboard.html';
+
+// Init
+document.getElementById('studentName').textContent=user.name||'Student';
+document.getElementById('studentAvatar').textContent=(user.name||'S')[0].toUpperCase();
+document.getElementById('classTitle').textContent=currentClass.className||'Class';
+document.getElementById('classSubject').textContent=currentClass.subject||'';
+
+// Switch tab
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  const tabs=['marks','attendance','notes','leaderboard'];
+  const idx=tabs.indexOf(name);
+  document.querySelectorAll('.tab')[idx].classList.add('active');
+  document.getElementById(`tab-${name}`).classList.add('active');
+  if(name==='attendance')loadAttendance();
+  if(name==='notes')loadNotes();
+  if(name==='leaderboard')loadLeaderboard();
+}
+
+// Load marks
+async function loadMarks(){
+  try{
+    const res=await fetch(`${API}/api/marks/student/${user.id}`,{headers:{'Authorization':`Bearer ${token}`}});
+    const data=await res.json();
+    const allMarks=data.marks||[];
+    // Filter by classId
+    const marks=allMarks.filter(m=>m.classId===currentClass.classId);
+    const c=document.getElementById('marksContainer');
+    if(marks.length===0){
+      c.innerHTML=`<div class="empty-state"><div class="empty-icon">📊</div><div class="empty-title">No marks yet</div><div class="empty-sub">Your teacher hasn't added marks yet</div></div>`;
+      return;
+    }
+    // Calculate avg
+    const avg=Math.round(marks.reduce((s,m)=>s+(m.marksObtained/m.totalMarks)*100,0)/marks.length);
+    document.getElementById('statAvgMarks').textContent=avg+'%';
+
+    c.innerHTML=`<div class="table-wrap"><table>
+      <thead><tr><th>Subject</th><th>Exam Type</th><th>Marks</th><th>Percentage</th><th>Grade</th><th>Remarks</th></tr></thead>
+      <tbody>${marks.map(m=>{
+        const pct=Math.round((m.marksObtained/m.totalMarks)*100);
+        const gc=m.grade==='F'?'grade-f':m.grade.startsWith('A')?'grade-a':m.grade.startsWith('B')?'grade-b':'grade-c';
+        return `<tr>
+          <td><strong>${m.subject}</strong></td>
+          <td style="text-transform:capitalize;color:rgba(255,255,255,.5)">${m.examType}</td>
+          <td><strong style="color:var(--c)">${m.marksObtained}</strong><span style="color:rgba(255,255,255,.3)">/${m.totalMarks}</span></td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="flex:1;height:5px;background:rgba(255,255,255,.06);border-radius:50px;overflow:hidden;min-width:60px">
+                <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--c),var(--v));border-radius:50px"></div>
+              </div>
+              <span style="font-size:.8rem;color:rgba(255,255,255,.5)">${pct}%</span>
+            </div>
+          </td>
+          <td><span class="grade-pill ${gc}">${m.grade}</span></td>
+          <td style="color:rgba(255,255,255,.35)">${m.remarks||'—'}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>`;
+  }catch(err){showToast('❌','Failed to load marks')}
+}
+
+// Load attendance
+async function loadAttendance(){
+  try{
+    const res=await fetch(`${API}/api/attendance/${currentClass.classId}`,{headers:{'Authorization':`Bearer ${token}`}});
+    const data=await res.json();
+    const allRecords=data.attendance||[];
+    const c=document.getElementById('attendanceContainer');
+    if(allRecords.length===0){
+      c.innerHTML=`<div class="empty-state"><div class="empty-icon">📡</div><div class="empty-title">No attendance records yet</div></div>`;
+      return;
+    }
+    let present=0,absent=0,late=0;
+    allRecords.forEach(r=>{
+      const me=r.records.find(rec=>rec.studentId===user.id);
+      if(me){
+        if(me.status==='present')present++;
+        else if(me.status==='absent')absent++;
+        else late++;
+      }
+    });
+    const total=present+absent+late;
+    const attPct=total>0?Math.round((present/total)*100):0;
+    const absPct=total>0?Math.round((absent/total)*100):0;
+    const latePct=total>0?Math.round((late/total)*100):0;
+    document.getElementById('statAttendance').textContent=attPct+'%';
+    const r=40,circ=2*Math.PI*r;
+    c.innerHTML=`
+      <div class="att-overview">
+        ${[
+          {label:'Present',pct:attPct,val:present,color:'#00ffe0',stroke:'#00ffe0'},
+          {label:'Absent',pct:absPct,val:absent,color:'#ff6b35',stroke:'#ff6b35'},
+          {label:'Late',pct:latePct,val:late,color:'#bf5fff',stroke:'#bf5fff'},
+        ].map(item=>`
+          <div class="att-ring-card">
+            <div class="ring-wrap">
+              <svg class="ring-svg" viewBox="0 0 100 100">
+                <circle class="ring-bg" cx="50" cy="50" r="${r}"/>
+                <circle class="ring-fill" cx="50" cy="50" r="${r}"
+                  stroke="${item.stroke}"
+                  stroke-dasharray="${circ}"
+                  stroke-dashoffset="${circ-(item.pct/100)*circ}"/>
+              </svg>
+              <div class="ring-center">
+                <div class="ring-pct" style="color:${item.color}">${item.pct}%</div>
+                <div class="ring-lbl-small">${item.val} classes</div>
+              </div>
+            </div>
+            <div class="att-ring-label">${item.label}</div>
+            <div class="att-ring-sub">${item.val} of ${total} lectures</div>
+          </div>`).join('')}
+      </div>
+      <div style="padding:20px;border-radius:14px;background:var(--card);border:1px solid ${attPct>=75?'rgba(0,255,224,0.15)':'rgba(255,107,53,0.15)'};text-align:center">
+        <div style="font-size:.8rem;color:rgba(255,255,255,.4);margin-bottom:6px;font-family:'Space Mono',monospace;letter-spacing:2px;text-transform:uppercase">Overall Status</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:3.5rem;color:${attPct>=75?'var(--c)':attPct>=50?'var(--v)':'var(--g)'}">${attPct}%</div>
+        <div style="font-size:.9rem;color:rgba(255,255,255,.5)">${attPct>=75?'✅ Great attendance!':attPct>=50?'⚠️ Attendance dropping!':'🚨 Critical — attend more!'}</div>
+      </div>`;
+  }catch(err){showToast('❌','Failed to load attendance')}
+}
+
+// Load notes
+async function loadNotes(){
+  try{
+    const res=await fetch(`${API}/api/notes/${currentClass.classId}`,{headers:{'Authorization':`Bearer ${token}`}});
+    const data=await res.json();
+    const notes=data.notes||[];
+    const c=document.getElementById('notesContainer');
+    if(notes.length===0){
+      c.innerHTML=`<div class="empty-state"><div class="empty-icon">📚</div><div class="empty-title">No notes uploaded yet</div><div class="empty-sub">Your teacher hasn't uploaded any material yet</div></div>`;
+      return;
+    }
+    c.innerHTML=`<div class="notes-grid">${notes.map(n=>{
+      const isPdf=n.fileType?.includes('pdf');
+      const isImg=n.fileType?.includes('image');
+      const type=isPdf?'pdf':isImg?'image':'doc';
+      const typeLabel=isPdf?'📄 PDF':isImg?'🖼 Image':'📝 Doc';
+      return `<div class="note-card ${type}">
+        <span class="note-type-tag ${type}">${typeLabel}</span>
+        <div class="note-title">${n.title}</div>
+        <div class="note-meta">${n.subject||''} ${n.description?'• '+n.description:''}</div>
+        <div class="note-btns">
+          ${n.fileUrl?`<a href="${n.fileUrl}" target="_blank" class="note-btn">View 👁</a>`:''}
+          ${n.fileUrl?`<a href="${n.fileUrl}" download class="note-btn">Download ⬇</a>`:''}
+        </div>
+      </div>`;
+    }).join('')}</div>`;
+  }catch(err){showToast('❌','Failed to load notes')}
+}
+
+// Load leaderboard
+async function loadLeaderboard(){
+  try{
+    const res=await fetch(`${API}/api/classes/leaderboard/${currentClass.classId}`,{headers:{'Authorization':`Bearer ${token}`}});
+    const data=await res.json();
+    const lb=data.leaderboard||[];
+    const c=document.getElementById('leaderboardContainer');
+
+    // Find my rank
+    const myRank=lb.findIndex(s=>s.userId===user.id||s.userId?.toString()===user.id);
+    if(myRank>=0)document.getElementById('statRank').textContent='#'+(myRank+1);
+
+    if(lb.length===0){
+      c.innerHTML=`<div class="empty-state"><div class="empty-icon">🏆</div><div class="empty-title">No students yet</div></div>`;
+      return;
+    }
+
+    function getLevel(xp){
+      if(xp>=2000)return'🌌';if(xp>=1000)return'🏆';
+      if(xp>=600)return'⭐';if(xp>=300)return'🎓';
+      if(xp>=100)return'🚀';return'🌱';
+    }
+
+    c.innerHTML=`<div class="lb-card">
+      ${lb.map((s,i)=>{
+        const isMe=s.userId===user.id||s.userId?.toString()===user.id;
+        const rankClass=i===0?'gold':i===1?'silver':i===2?'bronze':'normal';
+        const rankLabel=i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1);
+        return `<div class="lb-row ${isMe?'me':''}">
+          <div class="lb-rank ${rankClass}">${rankLabel}</div>
+          <div class="lb-avatar">${s.name[0].toUpperCase()}</div>
+          <div class="lb-info">
+            <div class="lb-name">${s.name} ${isMe?'<span style="font-size:.65rem;color:var(--c);font-family:Space Mono,monospace">(You)</span>':''}</div>
+            <div class="lb-roll">${s.rollNumber||''} • ${getLevel(s.xp||0)}</div>
+          </div>
+          <div style="text-align:right">
+            <div class="lb-xp">${s.xp||0}</div>
+            <div class="lb-xp-label">XP</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }catch(err){showToast('❌','Failed to load leaderboard')}
+}
+
+// Toast
+function showToast(icon,msg){
+  document.getElementById('toastIcon').textContent=icon;
+  document.getElementById('toastMsg').textContent=msg;
+  const t=document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+// Logout
+function logout(){
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  window.location.href='../login.html';
+}
+
+// Start
+loadMarks();
+</script>
+</body>
+</html>
